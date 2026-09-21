@@ -1,0 +1,151 @@
+package org.firstinspires.ftc.teamcode;
+
+
+import org.firstinspires.ftc.teamcode.RilLib.Math.ChassisSpeeds;
+import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Pose2d;
+import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Rotation2d;
+import org.firstinspires.ftc.teamcode.RilLib.Math.Matrix;
+import org.firstinspires.ftc.teamcode.RilLib.Math.Numbers.N1;
+import org.firstinspires.ftc.teamcode.RilLib.Math.Numbers.N3;
+import org.firstinspires.ftc.teamcode.RilLib.Math.PoseEstimator;
+import org.firstinspires.ftc.teamcode.util.TimeTracker;
+
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+/**
+ * Serializable snapshot of robot state to transfer from Auto to TeleOp.
+ * Keep units consistent with your configuration
+ * Project is set up as follows:
+ * - Pose2d: meters and radians.
+ * - Boolean for what alliance you are on sense there is only two
+ */
+public class RobotState {
+    private transient PoseEstimator poseEstimator = null;
+
+    private transient Rotation2d headingOffset = new Rotation2d();
+
+    private transient Lock poseLock = new ReentrantLock();
+
+    // Pose on the field
+    private Pose2d odometryPose;
+    private Pose2d estimatedPose;
+
+    private ChassisSpeeds chassisSpeeds;
+
+    // If true on blue alliance if false on red alliance
+    private Boolean isBlue;
+
+    private static RobotState instance;
+
+    /**
+     * Required no-argument constructor.
+     * Gson (and other serialization libraries) use this constructor when
+     * deserializing JSON back into a RobotState object. Without it, calls
+     * like {@code GSON.fromJson(...)} would fail because Java will not
+     * generate a default constructor once a parameterized constructor is
+     * defined. Typically not called directly in user code.
+     */
+    private RobotState() {}
+
+    public static RobotState getInstance() {
+        if (instance == null) {
+            instance = new RobotState();
+        }
+        return instance;
+    }
+
+    /**
+     * Creates a new RobotState with the given pose and alliance flag.
+     * This is typically used at the end of an Autonomous routine to capture
+     * the robot's final position and alliance information so it can be saved
+     * for use in TeleOp.
+     *
+     * @param pose   the robot's estimated field position and heading
+     * @param isBlue true if on the blue alliance, false if on the red alliance
+     */
+    private RobotState(Pose2d pose, Boolean isBlue, ChassisSpeeds chassisSpeeds) {
+        this.odometryPose = pose;
+        this.estimatedPose = pose;
+        this.isBlue = isBlue;
+        this.chassisSpeeds = chassisSpeeds;
+    }
+
+    public void setAll(Pose2d pose, Boolean isBlue, ChassisSpeeds chassisSpeeds) {
+        this.odometryPose = pose;
+        this.estimatedPose = pose;
+        this.isBlue = isBlue;
+        this.chassisSpeeds = chassisSpeeds;
+    }
+
+    /**
+     * Updates this RobotState from another RobotState instance.
+     * Copies all relevant fields safely into the singleton.
+     */
+    public void setAll(RobotState other) {
+        if (other == null) return;
+
+        addOdometryObservation(other.getOdometryPose(), TimeTracker.getTime());
+        this.estimatedPose = other.getEstimatedPose();
+        this.isBlue = other.isBlueTeam();
+        this.chassisSpeeds = other.getChassisSpeeds();
+    }
+
+    /** returns true if on the blue team */
+    public Boolean isBlueTeam() {return isBlue;}
+
+    public void setTeam(Boolean isBlue) {this.isBlue = isBlue;}
+
+    public Pose2d getOdometryPose() {return odometryPose;}
+
+    public Pose2d getEstimatedPose() {return estimatedPose;}
+
+    public void addOdometryObservation(Pose2d newPose, double time) {
+        poseLock.lock();
+
+        odometryPose = newPose;
+
+        if (poseEstimator == null) poseEstimator = new PoseEstimator(newPose);
+        poseEstimator.updateWithTime(time, newPose);
+        estimatedPose = poseEstimator.getEstimatedPosition();
+
+        poseLock.unlock();
+    }
+
+    public void addVisionObservation(Pose2d visionPose, double time, Matrix<N3, N1> visionStdDevs) {
+        if (poseEstimator == null) return;
+        poseLock.lock();
+
+        poseEstimator.addVisionMeasurement(visionPose, time, visionStdDevs);
+
+        poseLock.unlock();
+    }
+
+    public void setHeadingOffset(Rotation2d offset) {
+        headingOffset = offset;
+    }
+
+    public Rotation2d getHeadingOffset() {
+        return headingOffset;
+    }
+
+    public void setChassisSpeeds (ChassisSpeeds chassisSpeeds) {this.chassisSpeeds = chassisSpeeds;}
+
+    public ChassisSpeeds getChassisSpeeds() {return chassisSpeeds;}
+
+    /**
+     * Returns a human-readable string representation of this RobotState.
+     * This is mainly used for debugging, logging, or telemetry so you can
+     * quickly see the current values stored in the state (pose, alliance, etc.).
+     *
+     * @return a string showing the version, pose, and alliance flag
+     */
+    @Override
+    public String toString() {
+        return "RobotState{" +
+                "pose=" + odometryPose +
+                "estPose=" +estimatedPose+
+                "isBlue=" + isBlue +
+                "}";
+    }
+}
