@@ -1,4 +1,27 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
-public class MainTeleOp {
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.seattlesolvers.solverslib.command.CommandOpMode;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.Robot;
+
+
+@TeleOp(name = "MainTeleOp", group = "ScrapHeads")
+public class MainTeleOp extends CommandOpMode {
+
+    public Robot robot;
+
+    public HardwareMap hm;
+    public Telemetry tele;
+
+    @Override
+    public void initialize() {
+        this.tele = telemetry;
+        this.hm = hardwareMap;
+
+        robot = new Robot(hm, tele);
+    }
 }

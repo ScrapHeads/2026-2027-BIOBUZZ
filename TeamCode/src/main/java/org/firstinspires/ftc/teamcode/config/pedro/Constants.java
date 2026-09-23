@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.localization.DrivetrainLocalizer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Tuning;
 
 /**
@@ -27,7 +28,7 @@ public class Constants {
         c.frontLeftName.set("lf");
         c.backLeftName.set("lr");
         c.frontRightName.set("rf");
-        c.backRightName.set("rr");
+        c.backRightName.set("rb");
 
         c.frontLeftDirection.set(DcMotorSimple.Direction.REVERSE);
         c.backLeftDirection.set(DcMotorSimple.Direction.REVERSE);
@@ -38,7 +39,7 @@ public class Constants {
         c.manualBrakeMode.set(false);
     });
 
-    public static PinpointConfig localizerConfig = new PinpointConfig(c -> {
+    public static PinpointConfig pinpointLocalizerConfig = new PinpointConfig(c -> {
         c.name.set("pinpoint");
         c.xPodOffset.set(-5.0);
         c.yPodOffset.set(0.5);
@@ -78,7 +79,7 @@ public class Constants {
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new Follower(
-                new PinpointLocalizer(hardwareMap, localizerConfig),
+                new DrivetrainLocalizer(hardwareMap, pinpointLocalizerConfig),
                 new Mecanum(hardwareMap, drivetrainConfig),
                 new Foresight(foresightConfig)
         );

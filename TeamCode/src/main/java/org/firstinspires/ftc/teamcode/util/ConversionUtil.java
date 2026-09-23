@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.util;
 
-import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.Pose;
+
 import org.firstinspires.ftc.teamcode.RilLib.Math.ChassisSpeeds;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Pose2d;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Rotation2d;
@@ -15,8 +16,8 @@ public class ConversionUtil {
      * @param rilPose The RilLib Pose2d to convert.
      * @return The converted Pedro Pose.
      */
-    public static Pose toPedro(Pose2d rilPose) {
-        return new Pose(
+    public static com.pedropathing.math.Pose toPedro(Pose2d rilPose) {
+        return new com.pedropathing.math.Pose(
                 Units.metersToInches(rilPose.getX()),
                 Units.metersToInches(rilPose.getY()),
                 rilPose.getRotation().getRadians()
