@@ -21,8 +21,9 @@ public class Robot {
         this.telemetry = telemetry;
         dashboard = FtcDashboard.getInstance();
 
-        intake = new IntakeSubsystem(hm);
+        intake= new IntakeSubsystem(hm);
         intake.register();
+
 
         state = new StateIO(telemetry, dashboard);
     }

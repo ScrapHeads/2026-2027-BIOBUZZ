@@ -23,5 +23,9 @@ public class MainTeleOp extends CommandOpMode {
         this.hm = hardwareMap;
 
         robot = new Robot(hm, tele);
+        assignControleds();
+    }
+    public void  assignControleds(){
+
     }
 }
