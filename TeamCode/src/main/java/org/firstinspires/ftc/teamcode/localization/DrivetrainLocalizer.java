@@ -31,27 +31,6 @@ public class DrivetrainLocalizer implements Localizer {
     }
 
     @Override
-    public Pose getPose() {
-        return pedroPose;
-    }
-
-    @Override
-    public Pose getVelocity() {
-        return pinpoint.velocity().;
-    }
-
-    @Override
-    public Vector getVelocityVector() {
-        return pinpoint.getVelocityVector();
-    }
-
-    @Override
-    public void setStartPose(Pose setStart) {
-        pinpoint.setStartPose(setStart);
-        RobotState.getInstance().addOdometryObservation(ConversionUtil.toRil(setStart), TimeTracker.getTime());
-    }
-
-    @Override
     public void setPose(Pose setPose) {
         pinpoint.setPose(setPose);
         RobotState.getInstance().addOdometryObservation(ConversionUtil.toRil(setPose), TimeTracker.getTime());
@@ -59,32 +38,32 @@ public class DrivetrainLocalizer implements Localizer {
 
     @Override
     public void setX(double x) {
-        Localizer.super.setX(x);
+        pinpoint.setX(x);
     }
 
     @Override
     public void setY(double y) {
-        Localizer.super.setY(y);
+        pinpoint.setY(y);
     }
 
     @Override
     public void setHeading(double heading) {
-        Localizer.super.setHeading(heading);
+        pinpoint.setHeading(heading);
     }
 
     @Override
     public Pose pose() {
-        return Localizer.super.pose();
+        return pinpoint.pose();
     }
 
     @Override
     public Twist twist() {
-        return Localizer.super.twist();
+        return pinpoint.twist();
     }
 
     @Override
     public Velocity velocity() {
-        return Localizer.super.velocity();
+        return pinpoint.velocity();
     }
 
     @Override
@@ -100,7 +79,7 @@ public class DrivetrainLocalizer implements Localizer {
         // 2. Push the raw Pinpoint pose (Odometry) to the centralized PoseEstimator in RobotState
         // We use TimeTracker to ensure timestamps are consistent with vision data
         RobotState.getInstance().addOdometryObservation(
-                ConversionUtil.toRil(pinpoint.getPose()),
+                ConversionUtil.toRil(pinpoint.pose()),
                 TimeTracker.getTime()
         );
 
