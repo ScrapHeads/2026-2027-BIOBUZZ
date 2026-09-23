@@ -17,4 +17,6 @@ public class Transfer implements Subsystem {
     public double getPower (){
         return transfer.get();
     }
+
+
 }

@@ -13,4 +13,16 @@ public class SetPowerTransfer extends CommandBase {
 
         addRequirements(transfer);
     }
+    @Override
+    public void initialize(){
+        transfer.setPower(power);
+    }
+    @Override
+    public void end(boolean interrupted) {
+
+    }
+    @Override
+    public boolean isFinished(){
+        return true;
+    }
 }
