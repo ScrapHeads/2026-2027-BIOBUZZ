@@ -9,6 +9,8 @@ import static com.seattlesolvers.solverslib.gamepad.GamepadKeys.Button.*;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Robot;
+import org.firstinspires.ftc.teamcode.commands.transfer.SetPowerTransfer;
+import org.firstinspires.ftc.teamcode.subsystems.Transfer;
 
 
 @TeleOp(name = "MainTeleOp", group = "ScrapHeads")
@@ -29,6 +31,8 @@ public class MainTeleOp extends CommandOpMode {
         assignControls();
     }
     public void  assignControls(){
-        
+     robot.driver1.getGamepadButton(DPAD_UP)
+             .whenPressed(new SetPowerTransfer(robot.transfer, Transfer.INTAKE_POWER))
+             .whenReleased(new SetPowerTransfer(robot.transfer, Transfer.OUTTAKE_POWER));
     }
 }
