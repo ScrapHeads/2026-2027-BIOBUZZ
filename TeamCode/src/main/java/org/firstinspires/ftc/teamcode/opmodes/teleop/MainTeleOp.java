@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
-import com.acmerobotics.dashboard.FtcDashboard;
+
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
+import com.seattlesolvers.solverslib.gamepad.GamepadKeys.Trigger.*;
+import static com.seattlesolvers.solverslib.gamepad.GamepadKeys.Button.*;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Robot;
@@ -23,9 +25,10 @@ public class MainTeleOp extends CommandOpMode {
         this.hm = hardwareMap;
 
         robot = new Robot(hm, tele);
-        assignControleds();
-    }
-    public void  assignControleds(){
 
+        assignControls();
+    }
+    public void  assignControls(){
+        
     }
 }
