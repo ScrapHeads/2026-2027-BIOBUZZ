@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.commands.intake;
 import com.seattlesolvers.solverslib.command.CommandBase;
 
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
-
+//calian
 public class SetPowerIntake extends CommandBase {
     private final IntakeSubsystem intake;
     private final double power;
@@ -13,4 +13,17 @@ public class SetPowerIntake extends CommandBase {
 
         addRequirements(intake);
     }
+    @Override
+    public void initialize(){intake.setPower(power);}
+
+    @Override
+    public void end(boolean interrupted){
+
+    }
+    @Override
+    public boolean isFinished(){
+
+        return true;
+    }
+
 }
