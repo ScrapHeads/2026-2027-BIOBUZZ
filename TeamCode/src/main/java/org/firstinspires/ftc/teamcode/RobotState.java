@@ -25,7 +25,7 @@ public class RobotState {
 
     private transient Rotation2d headingOffset = new Rotation2d();
 
-    private transient Lock poseLock = new ReentrantLock();
+    private final transient Lock poseLock = new ReentrantLock();
 
     // Pose on the field
     private Pose2d odometryPose;

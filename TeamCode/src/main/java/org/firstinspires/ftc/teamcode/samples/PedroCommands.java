@@ -17,7 +17,7 @@ import com.seattlesolvers.solverslib.pedroCommand.TurnToCommand;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.config.pedro.Constants;
 
 /**
  * Shows every constructor of the Pedro commands, run one after another in a SequentialCommandGroup.

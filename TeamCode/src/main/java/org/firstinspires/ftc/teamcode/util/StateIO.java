@@ -1,0 +1,135 @@
+package org.firstinspires.ftc.teamcode.util;
+
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.qualcomm.robotcore.util.ReadWriteFile;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+import org.firstinspires.ftc.teamcode.RilLib.Math.ChassisSpeeds;
+import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Pose2d;
+import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Rotation2d;
+import org.firstinspires.ftc.teamcode.RobotState;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+
+/**
+ * Utility class for saving and loading {@link RobotState} objects
+ * between Autonomous and TeleOp. The state is persisted to a JSON
+ * file on the Robot Controller and can be read back later.
+ *
+ * <p>File location: /sdcard/FIRST/settings/auto_handoff.json</p>
+ */
+public class StateIO {
+
+    private static final String FILENAME = "RobotState.json";  // corrected extension
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
+    private final Telemetry telemetry;
+    private final FtcDashboard dashboard;
+
+    public StateIO (Telemetry telemetry, FtcDashboard dashboard) {
+        this.telemetry = telemetry;
+        this.dashboard = dashboard;
+    }
+
+    /**
+     * Gets the file reference for storing the robot state.
+     *
+     * @return the File object pointing to RobotState.json in the FIRST settings directory
+     */
+    private static File getFile() {
+        return AppUtil.getInstance().getSettingsFile(FILENAME);
+    }
+
+    /**
+     * Saves the given RobotState to disk as JSON.
+     * If the state is null or an error occurs, nothing is written.
+     *
+     */
+    public void save() {
+        try {
+            File file = getFile();
+
+            if (!file.exists()) {
+                file.getParentFile().mkdirs();  // ensure directory exists
+                file.createNewFile();
+            }
+
+            String json = GSON.toJson(RobotState.getInstance());
+            ReadWriteFile.writeFile(file, json);
+
+            telemetry.addLine("Found file and saved it");
+            telemetry.update();
+
+            TelemetryPacket packet = new TelemetryPacket();
+            packet.addLine("Found file and saved it");
+            dashboard.sendTelemetryPacket(packet);
+
+        } catch (Exception e) {
+            telemetry.addLine("StateIO save failed: " + e.getMessage());
+            telemetry.update();
+
+            TelemetryPacket packet = new TelemetryPacket();
+            packet.addLine("File failed to save");
+            dashboard.sendTelemetryPacket(packet);
+        }
+    }
+
+    /**
+     * Loads a RobotState from disk.
+     *
+     * @return the deserialized RobotState, or null if the file is missing
+     *         or could not be parsed
+     */
+    public void load() {
+        try {
+            File file = getFile();
+            if (file == null || !file.exists()) throw new FileNotFoundException();
+
+            telemetry.addData("File path", file.getAbsoluteFile());
+
+            String json = ReadWriteFile.readFile(file);
+            if (json == null || json.contentEquals("{}")) throw new NullPointerException();
+
+            // Create a temp container to transfer data
+            RobotState.getInstance().setAll(GSON.fromJson(json, RobotState.class));
+
+            clear();
+
+        } catch (FileNotFoundException e) {
+            setFakeRobotState();
+            telemetry.addLine("Failed to load");
+            telemetry.addLine("File doesn't exist");
+        } catch (NullPointerException e) {
+            setFakeRobotState();
+            telemetry.addLine("Failed to load");
+            telemetry.addLine("JSON is empty");
+        }
+    }
+
+    private void setFakeRobotState () {
+        RobotState.getInstance().setAll(
+                new Pose2d(0, 0, new Rotation2d(0)),
+                null,
+                new ChassisSpeeds()
+        );
+    }
+
+
+    /**
+     * Clears the saved RobotState so it cannot be reused accidentally.
+     * Writes an empty JSON object ("{}") into the file.
+     */
+    public void clear() {
+        try {
+            ReadWriteFile.writeFile(getFile(), "{}");
+        } catch (Exception ignored) {
+            // Safe to ignore
+        }
+    }
+}
+
