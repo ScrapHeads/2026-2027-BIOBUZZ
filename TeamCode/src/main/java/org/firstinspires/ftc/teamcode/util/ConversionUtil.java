@@ -32,9 +32,9 @@ public class ConversionUtil {
      */
     public static Pose2d toRil(Pose pedroPose) {
         return new Pose2d(
-                Units.inchesToMeters(pedroPose.getX()),
-                Units.inchesToMeters(pedroPose.getY()),
-                new Rotation2d(pedroPose.getHeading())
+                Units.inchesToMeters(pedroPose.x()),
+                Units.inchesToMeters(pedroPose.y()),
+                new Rotation2d(pedroPose.heading())
         );
     }
 
@@ -60,9 +60,9 @@ public class ConversionUtil {
      */
     public static ChassisSpeeds toRilSpeeds(Pose pedroVelocity) {
         return new ChassisSpeeds(
-                Units.inchesToMeters(pedroVelocity.getX()),
-                Units.inchesToMeters(pedroVelocity.getY()),
-                pedroVelocity.getHeading()
+                Units.inchesToMeters(pedroVelocity.x()),
+                Units.inchesToMeters(pedroVelocity.y()),
+                pedroVelocity.heading()
         );
     }
 

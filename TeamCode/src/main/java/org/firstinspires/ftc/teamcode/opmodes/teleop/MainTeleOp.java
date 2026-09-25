@@ -4,6 +4,8 @@ package org.firstinspires.ftc.teamcode.opmodes.teleop;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
+import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
+import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys.Trigger.*;
 import static com.seattlesolvers.solverslib.gamepad.GamepadKeys.Button.*;
 
@@ -24,22 +26,36 @@ public class MainTeleOp extends CommandOpMode {
     public HardwareMap hm;
     public Telemetry tele;
 
+    public GamepadEx driver1;
+    public GamepadEx driver2;
+
     @Override
     public void initialize() {
         this.tele = telemetry;
         this.hm = hardwareMap;
 
-        robot = new Robot(hm, tele);
+        driver1 = new GamepadEx(gamepad1);
+        driver2 = new GamepadEx(gamepad2);
+
+        robot = new Robot(hardwareMap, telemetry);
 
         assignControls();
     }
     public void  assignControls() {
-        robot.driver1.getGamepadButton(DPAD_RIGHT)
-                .whenPressed(new SetPowerIntake(robot.intake, IntakeSubsystem.INTAKE_POWER))
-                .whenReleased(new SetPowerIntake(robot.intake, IntakeSubsystem.STOP_POWER));
+        driver1.getGamepadButton(DPAD_RIGHT)
+                .whenPressed(new SetPowerIntake(robot.intake, IntakeSubsystem.INTAKE_POWER));
+        driver1.getGamepadButton(DPAD_LEFT)
+                .whenPressed(new SetPowerIntake(robot.intake, IntakeSubsystem.OUTAKE_POWER));
         
-        robot.driver1.getGamepadButton(DPAD_UP)
-                .whenPressed(new SetPowerTransfer(robot.transfer, Transfer.INTAKE_POWER))
-                .whenReleased(new SetPowerTransfer(robot.transfer, Transfer.OUTTAKE_POWER));
+        driver1.getGamepadButton(DPAD_UP)
+                .whenPressed(new SetPowerTransfer(robot.transfer, Transfer.INTAKE_POWER));
+        driver1.getGamepadButton(DPAD_DOWN)
+                .whenPressed(new SetPowerTransfer(robot.transfer, Transfer.OUTTAKE_POWER));
+
+        driver1.getGamepadButton(A)
+                .whenPressed(new ParallelCommandGroup(
+                        new SetPowerTransfer(robot.transfer, 0),
+                        new SetPowerIntake(robot.intake, 0)
+                ));
     }
 }
