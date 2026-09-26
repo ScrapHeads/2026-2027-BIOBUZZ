@@ -13,7 +13,7 @@ public class IntakeSubsystem implements Subsystem {
     public static final double STOP_POWER=0;
     public static MotorEx intake;
     public IntakeSubsystem(HardwareMap hm){
-        intake=new MotorEx(hm, "intake");
+        intake = new MotorEx(hm, "intake");
 
 
     }
