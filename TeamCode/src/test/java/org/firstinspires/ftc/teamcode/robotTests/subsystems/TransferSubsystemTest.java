@@ -4,34 +4,30 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.firstinspires.ftc.teamcode.subsystems.samples.SampleSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 import org.firstinspires.ftc.teamcode.util.TestUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public class TransferSubsystemTest {
-    public SampleSubsystem createSampleSubsystem() {
+    public TransferSubsystem createTransferSubsystem() {
         TestUtils.MockHardwareMap hardwareMap = new TestUtils.HardwareMapBuilder()
-                .withMotor("sampleMotor")
-                .withServo("sampleServo")
+                .withMotor("transfer")
                 .build();
-        return TestUtils.createSubsystem(SampleSubsystem::new, hardwareMap);
+        return TestUtils.createSubsystem(TransferSubsystem::new, hardwareMap);
     }
 
     @Test
     @DisplayName("Test Subsystem creation and motor/servo state management")
     public void testSubsystemBehavior() {
-        SampleSubsystem subsystem = createSampleSubsystem();
+        TransferSubsystem subsystem = createTransferSubsystem();
         assertNotNull(subsystem, "Subsystem should be instantiated successfully");
 
         // Verify motor power controls
-        subsystem.setMotorPower(0.85);
-        assertEquals(0.85, subsystem.getMotorPower(), 1e-6, "Motor power should match set value");
-
-        // Verify servo position controls
-        subsystem.setServoPosition(0.4);
-        assertEquals(0.4, subsystem.getServoPosition(), 1e-6, "Servo position should match set value");
+        subsystem.setPower(1);
+        assertEquals(1, subsystem.getPower(), 1, "Motor power should match set value");
     }
+
 
     @Test
     @DisplayName("Test Subsystem creation fails when required hardware is missing from HardwareMap")
@@ -39,7 +35,7 @@ public class TransferSubsystemTest {
         TestUtils.MockHardwareMap emptyMap = new TestUtils.MockHardwareMap();
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SampleSubsystem(emptyMap),
+                () -> new TransferSubsystem(emptyMap),
                 "Subsystem creation should fail if required motor or servo names are missing from HardwareMap"
         );
     }
