@@ -1,5 +1,4 @@
 package org.firstinspires.ftc.teamcode.commands.intake;
-
 import com.seattlesolvers.solverslib.command.CommandBase;
 
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
