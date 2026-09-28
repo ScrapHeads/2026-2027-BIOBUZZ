@@ -4,16 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.qualcomm.robotcore.hardware.HardwareMap;
-
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
-import org.firstinspires.ftc.teamcode.subsystems.samples.SampleSubsystem;
 import org.firstinspires.ftc.teamcode.util.TestUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public class TransferSubsystemTest {
-    public TransferSubsystem createSampleSubsystem() {
+    public TransferSubsystem createTransferSubsystem() {
         TestUtils.MockHardwareMap hardwareMap = new TestUtils.HardwareMapBuilder()
                 .withMotor("transfer")
                 .build();
@@ -23,7 +20,7 @@ public class TransferSubsystemTest {
     @Test
     @DisplayName("Test Subsystem creation and motor/servo state management")
     public void testSubsystemBehavior() {
-        TransferSubsystem subsystem = createSampleSubsystem();
+        TransferSubsystem subsystem = createTransferSubsystem();
         assertNotNull(subsystem, "Subsystem should be instantiated successfully");
 
         // Verify motor power controls
@@ -38,7 +35,7 @@ public class TransferSubsystemTest {
         TestUtils.MockHardwareMap emptyMap = new TestUtils.MockHardwareMap();
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SampleSubsystem(emptyMap),
+                () -> new TransferSubsystem(emptyMap),
                 "Subsystem creation should fail if required motor or servo names are missing from HardwareMap"
         );
     }
