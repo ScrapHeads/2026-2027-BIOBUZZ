@@ -55,22 +55,6 @@ public class RobotState {
         return instance;
     }
 
-    /**
-     * Creates a new RobotState with the given pose and alliance flag.
-     * This is typically used at the end of an Autonomous routine to capture
-     * the robot's final position and alliance information so it can be saved
-     * for use in TeleOp.
-     *
-     * @param pose   the robot's estimated field position and heading
-     * @param isBlue true if on the blue alliance, false if on the red alliance
-     */
-    private RobotState(Pose2d pose, Boolean isBlue, ChassisSpeeds chassisSpeeds) {
-        this.odometryPose = pose;
-        this.estimatedPose = pose;
-        this.isBlue = isBlue;
-        this.chassisSpeeds = chassisSpeeds;
-    }
-
     public void setAll(Pose2d pose, Boolean isBlue, ChassisSpeeds chassisSpeeds) {
         this.odometryPose = pose;
         this.estimatedPose = pose;
@@ -117,6 +101,7 @@ public class RobotState {
         poseLock.lock();
 
         poseEstimator.addVisionMeasurement(visionPose, time, visionStdDevs);
+        estimatedPose = poseEstimator.getEstimatedPosition();
 
         poseLock.unlock();
     }

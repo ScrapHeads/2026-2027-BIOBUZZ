@@ -189,6 +189,32 @@ public class TestUtils {
     }
 
     /**
+     * Initializes FtcDashboard.getInstance() on desktop JVM unit tests without triggering Android native library lookups.
+     * Uses Reflection and Unsafe to instantiate FtcDashboard without calling native hardware/network constructors,
+     * and sets the static instance field.
+     */
+    public static com.acmerobotics.dashboard.FtcDashboard startMockDashboard() {
+        try {
+            Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+            java.lang.reflect.Field unsafeField = unsafeClass.getDeclaredField("theUnsafe");
+            unsafeField.setAccessible(true);
+            Object unsafe = unsafeField.get(null);
+
+            java.lang.reflect.Method allocateInstance = unsafeClass.getMethod("allocateInstance", Class.class);
+            com.acmerobotics.dashboard.FtcDashboard mockDashboard =
+                    (com.acmerobotics.dashboard.FtcDashboard) allocateInstance.invoke(unsafe, com.acmerobotics.dashboard.FtcDashboard.class);
+
+            java.lang.reflect.Field instanceField = com.acmerobotics.dashboard.FtcDashboard.class.getDeclaredField("instance");
+            instanceField.setAccessible(true);
+            instanceField.set(null, mockDashboard);
+
+            return mockDashboard;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize mock FtcDashboard", e);
+        }
+    }
+
+    /**
      * Creates a MockHardwareMap populated with mock motors for all specified device names.
      */
     public static MockHardwareMap createHardwareMapWithMotors(String... motorNames) {
@@ -263,5 +289,19 @@ public class TestUtils {
 
     public static Transfer createDummyTransferSubsystem() {
         return createSubsystem(Transfer::new, "transfer");
+    }
+
+    /**
+     * Checks if a given subsystem is currently registered with the SolversLib CommandScheduler.
+     */
+    public static boolean isSubsystemRegistered(Subsystem subsystem) {
+        try {
+            java.lang.reflect.Field field = com.seattlesolvers.solverslib.command.CommandScheduler.class.getDeclaredField("m_subsystems");
+            field.setAccessible(true);
+            java.util.Map<?, ?> map = (java.util.Map<?, ?>) field.get(com.seattlesolvers.solverslib.command.CommandScheduler.getInstance());
+            return map.containsKey(subsystem);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
