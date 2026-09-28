@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
-import org.firstinspires.ftc.teamcode.subsystems.Transfer;
+import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.samples.SampleSubsystem;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -78,7 +78,7 @@ public class TestUtilsTest {
         IntakeSubsystem intake = TestUtils.createSubsystem(IntakeSubsystem::new, "intake");
         assertNotNull(intake);
 
-        Transfer transfer = TestUtils.createSubsystem(Transfer::new, "transfer");
+        TransferSubsystem transfer = TestUtils.createSubsystem(TransferSubsystem::new, "transfer");
         assertNotNull(transfer);
 
         TestUtils.MockHardwareMap sampleMap = new TestUtils.HardwareMapBuilder()

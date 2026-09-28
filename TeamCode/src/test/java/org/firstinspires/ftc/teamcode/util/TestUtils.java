@@ -9,7 +9,7 @@ import com.seattlesolvers.solverslib.command.Subsystem;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
-import org.firstinspires.ftc.teamcode.subsystems.Transfer;
+import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
@@ -287,8 +287,8 @@ public class TestUtils {
         return createSubsystem(IntakeSubsystem::new, "intake");
     }
 
-    public static Transfer createDummyTransferSubsystem() {
-        return createSubsystem(Transfer::new, "transfer");
+    public static TransferSubsystem createDummyTransferSubsystem() {
+        return createSubsystem(TransferSubsystem::new, "transfer");
     }
 
     /**

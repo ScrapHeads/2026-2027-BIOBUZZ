@@ -2,12 +2,12 @@ package org.firstinspires.ftc.teamcode.commands.transfer;
 
 import com.seattlesolvers.solverslib.command.CommandBase;
 
-import org.firstinspires.ftc.teamcode.subsystems.Transfer;
+import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 
 public class SetPowerTransferCommand extends CommandBase {
-    private final Transfer transfer;
+    private final TransferSubsystem transfer;
     private final double power;
-    public SetPowerTransferCommand(Transfer transfer, double power){
+    public SetPowerTransferCommand(TransferSubsystem transfer, double power){
         this.transfer = transfer;
         this.power = power;
 

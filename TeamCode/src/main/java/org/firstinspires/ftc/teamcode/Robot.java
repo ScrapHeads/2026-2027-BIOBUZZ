@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
-import org.firstinspires.ftc.teamcode.subsystems.Transfer;
+import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 import org.firstinspires.ftc.teamcode.util.StateIO;
 
 public class Robot {
@@ -14,7 +14,7 @@ public class Robot {
     public final FtcDashboard dashboard;
     public final StateIO state;
 
-    public final Transfer transfer;
+    public final TransferSubsystem transfer;
     public final IntakeSubsystem intake;
 
     public Robot (HardwareMap hm, Telemetry telemetry) {
@@ -25,7 +25,7 @@ public class Robot {
         intake = new IntakeSubsystem(hm);
         intake.register();
 
-        transfer = new Transfer(hm);
+        transfer = new TransferSubsystem(hm);
         transfer.register();
 
         state = new StateIO(telemetry, dashboard);
