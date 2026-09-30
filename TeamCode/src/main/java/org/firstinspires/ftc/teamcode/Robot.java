@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.subsystems.FlyWheelSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 import org.firstinspires.ftc.teamcode.util.StateIO;
@@ -16,7 +18,7 @@ public class Robot {
 
     public final TransferSubsystem transfer;
     public final IntakeSubsystem intake;
-
+    
     public Robot (HardwareMap hm, Telemetry telemetry) {
         this.hm = hm;
         this.telemetry = telemetry;
@@ -29,5 +31,9 @@ public class Robot {
         transfer.register();
 
         state = new StateIO(telemetry, dashboard);
+    }
+
+    public MultipleTelemetry getTelemetry () {
+        return new MultipleTelemetry(telemetry, dashboard.getTelemetry());
     }
 }

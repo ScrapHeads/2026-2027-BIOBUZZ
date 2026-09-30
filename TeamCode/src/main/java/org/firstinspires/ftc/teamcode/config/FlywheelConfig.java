@@ -2,11 +2,15 @@ package org.firstinspires.ftc.teamcode.config;
 
 import com.acmerobotics.dashboard.config.Config;
 
+import org.firstinspires.ftc.teamcode.util.PIDFValues;
+
 @Config
 public class FlywheelConfig {
-    public static final double MOTOR_TPR = 0;//todo
+    public static double targetRPM = 0;
+    public static double targetPower = 0;
+    public static boolean enablePID = false;
 
-    public static final double GEAR_RATIO = 1/3;
-
-    public static final double TICKS_PER_REV = MOTOR_TPR / GEAR_RATIO;
+    public static PIDFValues pidfValues = new PIDFValues(
+            0.0, 0.0, 0.0, 0.0
+    );
 }
