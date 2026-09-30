@@ -24,6 +24,6 @@ public class FlyWheelSubsystem implements Subsystem {
     public double getShooterRPM() { return (getTicksPerSec() * 60) / TICKS_PER_REV;}
 
     public double targetRPM () {
-
+    return 0.0;
     }
 }
