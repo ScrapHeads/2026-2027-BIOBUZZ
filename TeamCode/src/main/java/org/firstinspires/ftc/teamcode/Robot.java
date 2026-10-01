@@ -18,7 +18,7 @@ public class Robot {
 
     public final TransferSubsystem transfer;
     public final IntakeSubsystem intake;
-    
+
     public Robot (HardwareMap hm, Telemetry telemetry) {
         this.hm = hm;
         this.telemetry = telemetry;

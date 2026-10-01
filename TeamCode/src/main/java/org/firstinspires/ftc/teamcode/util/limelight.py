@@ -45,14 +45,14 @@ MAX_RANGE_CM = 300.0
 #
 # =====================================================================
 
-MIN_AREA_PCT = 0.0041
+MIN_AREA_PCT = 0.015
 MAX_AREA_PCT = 7.4818
 
-MIN_FULLNESS = 0.35
-MAX_FULLNESS = 1.00
+MIN_FULLNESS = 0.30
+MAX_FULLNESS = 0.99
 
 MIN_ASPECT = 0.0
-MAX_ASPECT = 20.0
+MAX_ASPECT = 3.0
 
 EROSION_STEPS = 1
 DILATION_STEPS = 1
@@ -127,8 +127,8 @@ CLASS_DEFS = [
         "NECTAR_B",
         2,
 
-        (95, 110, 70),
-        (125, 255, 255),
+        (120, 220, 0),
+        (125, 255, 50),
 
         None,
         None,
@@ -140,11 +140,11 @@ CLASS_DEFS = [
         "NECTAR_R",
         3,
 
-        (0, 120, 10),
-        (3, 255, 60),
+        (0, 228, 13),
+        (1, 255, 122),
 
-        (179, 150, 20),
-        (180, 255, 50),
+        None,
+        None,
 
         (0, 0, 255)
     )
