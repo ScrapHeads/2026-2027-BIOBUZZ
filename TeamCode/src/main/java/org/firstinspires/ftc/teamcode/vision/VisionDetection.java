@@ -1,6 +1,17 @@
 package org.firstinspires.ftc.teamcode.vision;
 
+import org.firstinspires.ftc.teamcode.vision.tracking.GameElementType;
+
 public class VisionDetection {
+
+    /**
+     * Raw detection from Python:
+     * - type
+     * - robot-relative X/Y
+     * - box information
+     * - area/fullness
+     * - image location
+     */
 
     private final GameElementType type;
     private final double forwardCm;
