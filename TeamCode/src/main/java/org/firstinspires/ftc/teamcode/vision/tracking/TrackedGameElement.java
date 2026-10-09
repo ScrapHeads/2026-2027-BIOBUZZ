@@ -17,43 +17,41 @@ public class TrackedGameElement {
 
     private final GameElementType type;
 
-    private final int id;
+    private final double id;
 
     private Pose2d estimatedPose;
 
-    private float confidence;
+    private double confidence;
 
-    private long lastSeenTime;
+    private double lastSeenTime;
 
     private double observationCount;
     private GameElementState state;
 
     public TrackedGameElement(
+            double id,
             GameElementType type,
-            int id,
             Pose2d estimatedPose,
-            float confidence,
-            long lastSeenTime,
-            double observationCount,
-            GameElementState state
+            double confidence,
+            double lastSeenTime
     ) {
         this.type = type;
         this.id = id;
         this.estimatedPose = estimatedPose;
         this.confidence = confidence;
         this.lastSeenTime = lastSeenTime;
-        this.observationCount = observationCount;
-        this.state = state;
+        this.observationCount = 1;
+        this.state = GameElementState.ACTIVE;
     }
 
-    public void updatePosition(Pose2d newEstimatedPose, long lastSeenTime, float confidence) {
+    public void updatePosition(Pose2d newEstimatedPose, double lastSeenTime, float confidence) {
         this.estimatedPose = newEstimatedPose;
         this.lastSeenTime = lastSeenTime;
         this.confidence = confidence;
         observationCount++;
     }
 
-    public int getId () {
+    public double getId () {
         return id;
     }
 

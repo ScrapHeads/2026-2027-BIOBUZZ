@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.vision.tracking;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GameElementMap {
@@ -8,6 +9,10 @@ public class GameElementMap {
      * potentially up to the full 56.
      */
     private final List<TrackedGameElement> gameElementMap;
+
+    public GameElementMap () {
+        this.gameElementMap = new ArrayList<TrackedGameElement>();
+    }
 
     public GameElementMap (List<TrackedGameElement> gameElementMap) {
         this.gameElementMap = gameElementMap;

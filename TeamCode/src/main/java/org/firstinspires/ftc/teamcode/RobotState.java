@@ -9,6 +9,7 @@ import org.firstinspires.ftc.teamcode.RilLib.Math.Numbers.N1;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Numbers.N3;
 import org.firstinspires.ftc.teamcode.RilLib.Math.PoseEstimator;
 import org.firstinspires.ftc.teamcode.util.TimeTracker;
+import org.firstinspires.ftc.teamcode.vision.CameraPose;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -30,6 +31,8 @@ public class RobotState {
     // Pose on the field
     private Pose2d odometryPose;
     private Pose2d estimatedPose;
+
+    private CameraPose cameraPose;
 
     private ChassisSpeeds chassisSpeeds;
 
@@ -83,6 +86,14 @@ public class RobotState {
     public Pose2d getOdometryPose() {return odometryPose;}
 
     public Pose2d getEstimatedPose() {return estimatedPose;}
+
+    public void setCameraPose (CameraPose newPose) {
+        cameraPose = newPose;
+    }
+
+    public CameraPose getCameraPose () {
+        return cameraPose;
+    }
 
     public void addOdometryObservation(Pose2d newPose, double time) {
         poseLock.lock();
