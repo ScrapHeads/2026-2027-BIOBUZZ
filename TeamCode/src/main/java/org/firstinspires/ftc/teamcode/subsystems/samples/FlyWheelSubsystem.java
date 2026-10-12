@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems.samples;
 
-import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.TICKS_PER_REV;
+import static org.firstinspires.ftc.teamcode.subsystems.FlyWheelSubsystem.TICKS_PER_REV;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Subsystem;

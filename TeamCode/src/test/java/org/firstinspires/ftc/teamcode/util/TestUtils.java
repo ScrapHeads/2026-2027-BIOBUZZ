@@ -71,6 +71,11 @@ public class TestUtils {
             return this;
         }
 
+        public HardwareMapBuilder withLimelight(String name) {
+            map.putDevice(name, createMockLimelight());
+            return this;
+        }
+
         public HardwareMapBuilder withDevice(String name, HardwareDevice device) {
             map.putDevice(name, device);
             return this;
@@ -208,9 +213,31 @@ public class TestUtils {
             instanceField.setAccessible(true);
             instanceField.set(null, mockDashboard);
 
+            java.lang.reflect.Field telemetryField = com.acmerobotics.dashboard.FtcDashboard.class.getDeclaredField("telemetry");
+            telemetryField.setAccessible(true);
+            telemetryField.set(mockDashboard, createMockTelemetry());
+
             return mockDashboard;
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize mock FtcDashboard", e);
+        }
+    }
+
+    /**
+     * Creates a mock Limelight3A instance for unit testing on desktop JVM.
+     */
+    public static com.qualcomm.hardware.limelightvision.Limelight3A createMockLimelight() {
+        try {
+            Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+            java.lang.reflect.Field unsafeField = unsafeClass.getDeclaredField("theUnsafe");
+            unsafeField.setAccessible(true);
+            Object unsafe = unsafeField.get(null);
+
+            java.lang.reflect.Method allocateInstance = unsafeClass.getMethod("allocateInstance", Class.class);
+            return (com.qualcomm.hardware.limelightvision.Limelight3A)
+                    allocateInstance.invoke(unsafe, com.qualcomm.hardware.limelightvision.Limelight3A.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to allocate mock Limelight3A", e);
         }
     }
 

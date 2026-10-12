@@ -15,7 +15,8 @@ public class RobotClassTest {
     public TestUtils.MockHardwareMap createMockHardwareMap () {
         TestUtils.HardwareMapBuilder mockHardwareMap = new TestUtils.HardwareMapBuilder()
                 .withMotor("intake")
-                .withMotor("transfer");
+                .withMotor("transfer")
+                .withLimelight("limelight");
         return mockHardwareMap.build();
     }
 
@@ -46,8 +47,10 @@ public class RobotClassTest {
 
         assertNotNull(robot.intake, "Intake should not be null");
         assertNotNull(robot.transfer, "Transfer should not be null");
+        assertNotNull(robot.vision, "Vision should not be null");
 
         assertTrue(TestUtils.isSubsystemRegistered(robot.intake), "IntakeSubsystem should be registered with CommandScheduler");
         assertTrue(TestUtils.isSubsystemRegistered(robot.transfer), "Transfer subsystem should be registered with CommandScheduler");
+        assertTrue(TestUtils.isSubsystemRegistered(robot.vision), "VisionSubsystem should be registered with CommandScheduler");
     }
 }

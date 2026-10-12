@@ -15,9 +15,9 @@ public class TrackedGameElement {
      * - tracking state
      */
 
-    private final GameElementType type;
-
     private final double id;
+
+    private final GameElementType type;
 
     private Pose2d estimatedPose;
 
@@ -51,7 +51,7 @@ public class TrackedGameElement {
         observationCount++;
     }
 
-    public double getId () {
+    public double getId() {
         return id;
     }
 
@@ -59,15 +59,56 @@ public class TrackedGameElement {
         return type;
     }
 
-    public GameElementState getState () {
+    public Pose2d getEstimatedPose() {
+        return estimatedPose;
+    }
+
+    public void setEstimatedPose(Pose2d estimatedPose) {
+        this.estimatedPose = estimatedPose;
+    }
+
+    public double getConfidence() {
+        return confidence;
+    }
+
+    public void setConfidence(double confidence) {
+        this.confidence = confidence;
+    }
+
+    public double getLastSeenTime() {
+        return lastSeenTime;
+    }
+
+    public void setLastSeenTime(double lastSeenTime) {
+        this.lastSeenTime = lastSeenTime;
+    }
+
+    public double getObservationCount() {
+        return observationCount;
+    }
+
+    public void setObservationCount(double observationCount) {
+        this.observationCount = observationCount;
+    }
+
+    public GameElementState getState() {
         return state;
     }
 
-    public void setState (GameElementState state) {
+    public void setState(GameElementState state) {
         this.state = state;
     }
 
-    public Pose2d getPose() {
-        return estimatedPose;
+    public static GameElementType calcElementType (double id) {
+        switch (Math.floorDiv((int) id, 1000)) {
+            case 1:
+                return GameElementType.POLLEN;
+            case 2:
+                return GameElementType.BLUE_NECTAR;
+            case 3:
+                return GameElementType.RED_NECTAR;
+            default:
+                return GameElementType.UNKNOWN;
+        }
     }
 }

@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.opmodes.teleop;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
+import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 
@@ -12,10 +13,11 @@ import static com.seattlesolvers.solverslib.gamepad.GamepadKeys.Button.*;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.commands.intake.SetPowerIntakeCommand;
+import org.firstinspires.ftc.teamcode.config.VisionConstants;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.commands.transfer.SetPowerTransferCommand;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
-
+import org.firstinspires.ftc.teamcode.vision.VisionStateManager;
 
 
 @TeleOp(name = "MainTeleOp", group = "ScrapHeads")
@@ -41,12 +43,24 @@ public class MainTeleOp extends CommandOpMode {
 
         assignControls();
     }
+
+    @Override
+    public void run() {
+        super.run(); // VERY IMPORTANT: runs the CommandScheduler on every loop cycle
+
+        // Add any telemetry data you want updated every loop cycle
+        robot.getTelemetry().addData("Loop Status", "Running");
+
+        // Flushes telemetry updates to BOTH Driver Hub and FTC Dashboard
+        robot.getTelemetry().update();
+    }
+
     public void  assignControls() {
         driver1.getGamepadButton(DPAD_RIGHT)
                 .whenPressed(new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_POWER));
         driver1.getGamepadButton(DPAD_LEFT)
                 .whenPressed(new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.OUTAKE_POWER));
-        
+
         driver1.getGamepadButton(DPAD_UP)
                 .whenPressed(new SetPowerTransferCommand(robot.transfer, TransferSubsystem.INTAKE_POWER));
         driver1.getGamepadButton(DPAD_DOWN)
@@ -57,5 +71,10 @@ public class MainTeleOp extends CommandOpMode {
                         new SetPowerTransferCommand(robot.transfer, 0),
                         new SetPowerIntakeCommand(robot.intake, 0)
                 ));
+
+        driver1.getGamepadButton(X)
+                .whenPressed(new InstantCommand(() -> robot.vision.setPipeline(VisionConstants.GAME_ELEMENT_TRACKER_PIPELINE)));
+        driver1.getGamepadButton(B)
+                .whenPressed(new InstantCommand(() -> robot.vision.setPipeline(VisionConstants.APRIL_TAG_PIPELINE)));
     }
 }

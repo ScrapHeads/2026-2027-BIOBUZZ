@@ -16,7 +16,7 @@ public class IntakeSubsystemTest {
     }
     @Test
     @DisplayName("Test Subsystem creation and motor/servo state management")
-    public void IntakeSubsystemBehavior() {
+    public void testIntakeSubsystemBehavior() {
         IntakeSubsystem subsystem = createIntakeSubsystem();
         assertNotNull(subsystem, "Subsystem should be instantiated successfully");
 

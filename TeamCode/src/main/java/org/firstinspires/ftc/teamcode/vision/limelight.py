@@ -1,884 +1,326 @@
+"""Bio-Buzz Limelight SnapScript: 30 field-relative tracked elements (120 doubles).
+
+Input llrobot, supplied by updatePythonInputs(double[]):
+ [robot_field_x_m, robot_field_y_m, robot_heading_rad,
+  camera_forward_m, camera_left_m, camera_height_m,
+  camera_pitch_deg, camera_yaw_deg]
+
+Output: 30 slots of [encoded_id, field_x_m, field_y_m, confidence].
+Unused slots: [-1, 0, 0, 0]. IDs encode element type as type*1000 + track_id.
+"""
 import cv2
 import numpy as np
 import math
+import time
 
-
-# =====================================================================
-# CAMERA GEOMETRY
-# Measure these on the actual robot.
-# Units: centimeters
-# =====================================================================
-
-CAM_HEIGHT_CM = 25.0
+# Camera settings: defaults only used for missing mounting inputs.
+CAM_HEIGHT_M = 0.25
 CAM_PITCH_DEG = 20.0
-
-# Camera position relative to robot center
-CAM_FWD_CM = 15.0
-CAM_LEFT_CM = 0.0
-
-# Limelight 3A FOV
+CAM_FWD_M = 0.15
+CAM_LEFT_M = 0.0
+CAM_YAW_DEG = 0.0
 HFOV_DEG = 54.5
 VFOV_DEG = 42.0
 
-
-# =====================================================================
-# PROCESSING
-# =====================================================================
-
 PROC_WIDTH = 320
 BLUR_KSIZE = 2
-
-MAX_RANGE_CM = 300.0
-
-
-# =====================================================================
-# LIMELIGHT CONTOUR SETTINGS
-#
-# Based on the settings you provided:
-#
-# Sort: Largest
-# Area: 0.0041% - 7.4818%
-# Fullness: 64.1% - 100%
-# W/H Ratio: 0 - 20
-# Direction Filter: None
-# Smart Speckle Rejection: 90
-#
-# =====================================================================
-
+MAX_RANGE_M = 0.300
 MIN_AREA_PCT = 0.015
 MAX_AREA_PCT = 7.4818
-
 MIN_FULLNESS = 0.30
 MAX_FULLNESS = 0.99
-
 MIN_ASPECT = 0.0
 MAX_ASPECT = 3.0
-
 EROSION_STEPS = 1
 DILATION_STEPS = 1
-
-
-# Approximation of Limelight's smart speckle behavior.
-#
-# Keep contours at least 10% the size of the largest contour
-# of the same color.
-#
-# We can adjust this after testing.
 SPECKLE_KEEP_RATIO = 0.20
 
-
-# =====================================================================
-# OUTPUT
-#
-# FTC getPythonOutput() gives us 32 values.
-#
-# [0] = number of objects returned
-#
-# Each object gets:
-#
-# type
-# X forward cm
-# Y left/right cm
-#
-# 10 objects = 30 values
-#
-# Index 31 = total detections before output limit
-# =====================================================================
-
-MAX_REPORTED = 10
-OUTPUT_SIZE = 32
-
-
-# =====================================================================
-# OBJECT IDS
-#
-# 1 = Yellow pollen
-# 2 = Blue nectar
-# 3 = Red nectar
-# =====================================================================
-
-
-# =====================================================================
-# HSV SETTINGS
-#
-# These are your current starting values.
-# They WILL need tuning using actual BIOBUZZ elements and field lighting.
-#
-# OpenCV Hue range is 0-179.
-# CLASSES:  name, id, hsvLo1, hsvHi1, hsvLo2, hsvHi2, drawColor(BGR)
-# =====================================================================
-
-CLASS_DEFS = [
-
-    (
-        "POLLEN_Y",
-        1,
-
-        (23, 192, 33),
-        (37, 255, 255),
-
-        None,
-        None,
-
-        (0, 255, 255)
-    ),
-
-    (
-        "NECTAR_B",
-        2,
-
-        (120, 220, 0),
-        (125, 255, 50),
-
-        None,
-        None,
-
-        (255, 140, 0)
-    ),
-
-    (
-        "NECTAR_R",
-        3,
-
-        (0, 228, 13),
-        (1, 255, 122),
-
-        None,
-        None,
-
-        (0, 0, 255)
-    )
-]
-
-
-# =====================================================================
-# MORPHOLOGY
-# =====================================================================
-
-MORPH_K = cv2.getStructuringElement(
-    cv2.MORPH_ELLIPSE,
-    (3, 3)
-)
-
-FONT = cv2.FONT_HERSHEY_SIMPLEX
-
-
-# =====================================================================
-# DEBUGGING
-#
-# Prints approximately every 15 frames instead of flooding the terminal.
-# Set DEBUG = False once everything works.
-# =====================================================================
-
+OUTPUT_SIZE = 120
+VALUES_PER_ELEMENT = 4
+MAX_REPORTED = OUTPUT_SIZE // VALUES_PER_ELEMENT
+EMPTY_ID = -1.0
+TYPE_ID_MULTIPLIER = 1000
+ROBOT_POSE_VALUES = 3
+CAMERA_HEIGHT_INDEX = 5
+MIN_CAMERA_HEIGHT_M = 0.0001
+TRACK_TIMEOUT_SEC = 2.0
+MATCH_GATE_M = 0.25
+MIN_CONFIDENCE = 0.0
+CONFIDENCE_DISTANCE_SCALE_M = .200
+# Use measured ball area at known range to calibrate size consistency later.
+# For now, area is used as a relative visibility term, not calibrated probability.
+AREA_CONFIDENCE_SCALE_PCT = 0.20
 DEBUG = True
 DEBUG_EVERY_N_FRAMES = 15
+DEBUG_MAX_ELEMENTS = 30  # Maximum individual detections to print per debug cycle.
 
+# Original HSV values and drawing colors, unchanged.
+CLASS_DEFS = [
+    ("POLLEN_Y", 1, (23, 192, 33), (37, 255, 255), None, None, (0, 255, 255)),
+    ("NECTAR_B", 2, (120, 220, 0), (125, 255, 50), None, None, (255, 140, 0)),
+    ("NECTAR_R", 3, (0, 228, 13), (1, 255, 122), None, None, (0, 0, 255)),
+]
+MORPH_K = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+FONT = cv2.FONT_HERSHEY_SIMPLEX
 frame_counter = 0
+tracks = {}  # encoded_id -> {x, y, last_seen, last_sent, ...}
+next_track_id = {1: 0, 2: 0, 3: 0}
 
 
-# =====================================================================
-# GROUND PROJECTION
-#
-# Converts image pixel position to a robot-relative location.
-#
-# Robot coordinate system:
-#
-# +X = forward
-# +Y = left
-#
-# =====================================================================
+def empty_output():
+    return [EMPTY_ID, 0.0, 0.0, 0.0] * MAX_REPORTED
 
-def groundProject(
-        px,
-        py,
-        cx,
-        cy,
-        fx,
-        fy,
-        cam_h,
-        sinp,
-        cosp):
 
-    nx = (px - cx) / fx
+def read_inputs(llrobot):
+    """Keep calibrated camera defaults until valid mounting inputs arrive.
+
+    A zero-valued camera X/Y or yaw is legitimate. An absent/zero camera
+    height is not; treat it as a signal that calibration has not been sent.
+    """
+    values = [0.0, 0.0, 0.0, CAM_FWD_M, CAM_LEFT_M,
+              CAM_HEIGHT_M, CAM_PITCH_DEG, CAM_YAW_DEG]
+    if llrobot is None:
+        return values
+
+    count = min(len(llrobot), len(values))
+    for i in range(min(count, ROBOT_POSE_VALUES)):
+        values[i] = float(llrobot[i])
+
+    # Only trust camera configuration when a valid, positive height is sent.
+    # This prevents a zero-filled llrobot from erasing camera calibration.
+    if count > CAMERA_HEIGHT_INDEX:
+        height = float(llrobot[CAMERA_HEIGHT_INDEX])
+        if math.isfinite(height) and height > MIN_CAMERA_HEIGHT_M:
+            for i in range(ROBOT_POSE_VALUES, count):
+                candidate = float(llrobot[i])
+                if math.isfinite(candidate):
+                    values[i] = candidate
+    return values
+
+
+def rotate(x, y, angle):
+    c, s = math.cos(angle), math.sin(angle)
+    return x*c - y*s, x*s + y*c
+
+
+def ground_project(px, py, cx, cy, fx, fy, camera):
+    """Project bottom center of contour onto floor in robot coordinates."""
+    cam_forward, cam_left, height, pitch_deg, yaw_deg = camera
+    if height <= 0:
+        return None
     ny = (py - cy) / fy
-
-    # Ray direction in robot coordinates
-    forward = cosp - ny * sinp
+    nx = (px - cx) / fx
+    pitch = math.radians(pitch_deg)
+    forward = math.cos(pitch) - ny*math.sin(pitch)
     left = -nx
-    up = -sinp - ny * cosp
-
-    # Pixel ray does not point toward floor
-    if up > -0.02:
-        return False, 0.0, 0.0
-
-    t = -cam_h / up
-
-    if t <= 0.0:
-        return False, 0.0, 0.0
-
-    X = t * forward + CAM_FWD_CM
-    Y = t * left + CAM_LEFT_CM
-
-    return True, X, Y
+    up = -math.sin(pitch) - ny*math.cos(pitch)
+    if up >= -0.02:
+        return None
+    t = -height / up
+    if t <= 0:
+        return None
+    x, y = rotate(t*forward, t*left, math.radians(yaw_deg))
+    return x + cam_forward, y + cam_left
 
 
-# =====================================================================
-# SCALE CONTOUR BACK TO ORIGINAL IMAGE SIZE
-# =====================================================================
-
-def scaleContour(contour, scale_factor):
-
-    if scale_factor == 1.0:
-        return contour
-
-    scaled = contour.astype(np.float32)
-
-    scaled[:, :, 0] *= scale_factor
-    scaled[:, :, 1] *= scale_factor
-
-    return scaled.astype(np.int32)
+def estimate_confidence(area_pct, fullness, distance_m):
+    """Heuristic positional reliability, NOT a calibrated probability."""
+    size_score = area_pct / (area_pct + AREA_CONFIDENCE_SCALE_PCT)
+    range_score = 1.0 / (1.0 + (distance_m / CONFIDENCE_DISTANCE_SCALE_M)**2)
+    return max(MIN_CONFIDENCE, min(1.0, size_score * fullness * range_score))
 
 
-# =====================================================================
-# MAIN LIMELIGHT PIPELINE
-# =====================================================================
+def update_tracks(detections, now):
+    """Greedy same-color, nearest-field-position data association."""
+    global tracks
+    matched = set()
+    detections.sort(key=lambda d: d["confidence"], reverse=True)
+    for det in detections:
+        best_id, best_dist = None, MATCH_GATE_M
+        for track_id, track in tracks.items():
+            if track_id in matched or track["type"] != det["type"]:
+                continue
+            dist = math.hypot(det["field_x"]-track["field_x"],
+                              det["field_y"]-track["field_y"])
+            if dist < best_dist:
+                best_id, best_dist = track_id, dist
+        if best_id is None:
+            element_type = det["type"]
+            # Reuse an available local ID only after its previous track expires.
+            used_ids = set(tracks.keys())
+            for _ in range(TYPE_ID_MULTIPLIER):
+                local_id = next_track_id[element_type]
+                next_track_id[element_type] = (local_id + 1) % TYPE_ID_MULTIPLIER
+                candidate = element_type * TYPE_ID_MULTIPLIER + local_id
+                if candidate not in used_ids:
+                    best_id = candidate
+                    break
+        if best_id is None:
+            continue
+        previous_sent = tracks[best_id]["last_sent"] if best_id in tracks else -1e9
+        tracks[best_id] = dict(det, last_seen=now, last_sent=previous_sent,
+                               visible=True)
+        matched.add(best_id)
+    for track_id in list(tracks):
+        if track_id not in matched:
+            tracks[track_id]["visible"] = False
+        if now - tracks[track_id]["last_seen"] > TRACK_TIMEOUT_SEC:
+            del tracks[track_id]
+
+
+def choose_tracks(now):
+    """Prioritize visibility/confidence, then spread across four image regions."""
+    regions = [[] for _ in range(4)]
+    for track_id, track in tracks.items():
+        if track["visible"]:
+            regions[track["region"]].append((track_id, track))
+
+    def priority(entry):
+        t = entry[1]
+        return min(2.0, now - t["last_sent"]) + t["confidence"]
+
+    for region in regions:
+        region.sort(key=priority, reverse=True)
+    selected = []
+    # Round robin provides coverage without hard-capping busy regions.
+    while len(selected) < MAX_REPORTED and any(regions):
+        for region in regions:
+            if region and len(selected) < MAX_REPORTED:
+                selected.append(region.pop(0))
+    return selected
+
 
 def runPipeline(image, llrobot):
-
     global frame_counter
-
     frame_counter += 1
-
-
-    # -----------------------------------------------------------------
-    # ALWAYS construct valid output first.
-    # -----------------------------------------------------------------
-
-    llpython = [0.0] * OUTPUT_SIZE
-
-    best_contour = np.array([[]])
-
-
+    now = time.monotonic()
+    llpython = empty_output()
+    best_contour = np.array([[]], dtype=np.int32)
     if image is None or image.size == 0:
-
-        if DEBUG:
-            print("[VISION] ERROR: No camera image")
-
+        if DEBUG and frame_counter % DEBUG_EVERY_N_FRAMES == 0:
+            print("[BIOBUZZ] ERROR: No camera image; returning {} empty values".format(
+                len(llpython)))
         return best_contour, image, llpython
 
-
+    robot_x, robot_y, robot_heading, cam_fwd, cam_left, cam_h, cam_pitch, cam_yaw = read_inputs(llrobot)
+    camera = (cam_fwd, cam_left, cam_h, cam_pitch, cam_yaw)
     full_h, full_w = image.shape[:2]
-
-
-    # -----------------------------------------------------------------
-    # OPTIONAL LIVE CAMERA VALUES FROM CONTROL HUB
-    #
-    # llrobot[0] = camera pitch
-    # llrobot[1] = camera height
-    #
-    # If zero/not supplied, constants above are used.
-    # -----------------------------------------------------------------
-
-    cam_pitch = CAM_PITCH_DEG
-    cam_height = CAM_HEIGHT_CM
-
-    try:
-
-        if llrobot is not None:
-
-            if len(llrobot) >= 1:
-                if abs(llrobot[0]) > 0.001:
-                    cam_pitch = float(llrobot[0])
-
-            if len(llrobot) >= 2:
-                if llrobot[1] > 0.001:
-                    cam_height = float(llrobot[1])
-
-    except Exception:
-        pass
-
-
-    # -----------------------------------------------------------------
-    # RESIZE IMAGE
-    # -----------------------------------------------------------------
-
-    if full_w > PROC_WIDTH:
-
-        scale = float(PROC_WIDTH) / float(full_w)
-
-        sw = PROC_WIDTH
-        sh = max(
-            1,
-            int(round(full_h * scale))
-        )
-
-        small = cv2.resize(
-            image,
-            (sw, sh),
-            interpolation=cv2.INTER_AREA
-        )
-
-    else:
-
-        scale = 1.0
-
-        sw = full_w
-        sh = full_h
-
-        small = image.copy()
-
-
-    inverse_scale = 1.0 / scale
-
-
-    # -----------------------------------------------------------------
-    # BLUR + HSV
-    # -----------------------------------------------------------------
-
-    small = cv2.blur(
-        small,
-        (BLUR_KSIZE, BLUR_KSIZE)
-    )
-
-    hsv = cv2.cvtColor(
-        small,
-        cv2.COLOR_BGR2HSV
-    )
-
-
-    # -----------------------------------------------------------------
-    # CAMERA MODEL
-    # -----------------------------------------------------------------
-
-    fx = (sw * 0.5) / math.tan(
-        math.radians(HFOV_DEG * 0.5)
-    )
-
-    fy = (sh * 0.5) / math.tan(
-        math.radians(VFOV_DEG * 0.5)
-    )
-
-    cx = sw * 0.5
-    cy = sh * 0.5
-
-    frame_area = float(sw * sh)
-
-
-    pitch_rad = math.radians(cam_pitch)
-
-    sinp = math.sin(pitch_rad)
-    cosp = math.cos(pitch_rad)
-
-
-    # -----------------------------------------------------------------
-    # ALL DETECTED ELEMENTS
-    # -----------------------------------------------------------------
-
+    scale = min(1.0, float(PROC_WIDTH) / full_w)
+    sw, sh = max(1, int(round(full_w*scale))), max(1, int(round(full_h*scale)))
+    small = cv2.resize(image, (sw, sh), interpolation=cv2.INTER_AREA) if scale < 1 else image.copy()
+    hsv = cv2.cvtColor(cv2.blur(small, (BLUR_KSIZE, BLUR_KSIZE)), cv2.COLOR_BGR2HSV)
+    fx = (sw/2.0) / math.tan(math.radians(HFOV_DEG/2.0))
+    fy = (sh/2.0) / math.tan(math.radians(VFOV_DEG/2.0))
+    cx, cy, frame_area = sw/2.0, sh/2.0, float(sw*sh)
     detections = []
+    raw_counts = {}
+    passed_contours = 0
+    rejected_projection = 0
+    rejected_range = 0
+    rejected_speckle = 0
 
-    raw_counts = {
-        1: 0,
-        2: 0,
-        3: 0
-    }
-
-
-    # =================================================================
-    # PROCESS EACH COLOR
-    # =================================================================
-
-    for (
-        name,
-        cid,
-        lo1,
-        hi1,
-        lo2,
-        hi2,
-        draw_color
-    ) in CLASS_DEFS:
-
-
-        # -------------------------------------------------------------
-        # HSV MASK
-        # -------------------------------------------------------------
-
-        mask = cv2.inRange(
-            hsv,
-            np.array(lo1, dtype=np.uint8),
-            np.array(hi1, dtype=np.uint8)
-        )
-
-
-        # Red requires two hue ranges
+    for name, class_id, lo1, hi1, lo2, hi2, draw_color in CLASS_DEFS:
+        mask = cv2.inRange(hsv, np.array(lo1, np.uint8), np.array(hi1, np.uint8))
         if lo2 is not None:
-
-            second_mask = cv2.inRange(
-                hsv,
-                np.array(lo2, dtype=np.uint8),
-                np.array(hi2, dtype=np.uint8)
-            )
-
-            mask = cv2.bitwise_or(
-                mask,
-                second_mask
-            )
-
-
-        # -------------------------------------------------------------
-        # REMOVE SMALL COLOR NOISE
-        # -------------------------------------------------------------
-
+            mask = cv2.bitwise_or(mask, cv2.inRange(
+                hsv, np.array(lo2, np.uint8), np.array(hi2, np.uint8)))
         mask = cv2.erode(mask, MORPH_K, iterations=EROSION_STEPS)
         mask = cv2.dilate(mask, MORPH_K, iterations=DILATION_STEPS)
-
-
-        # -------------------------------------------------------------
-        # FIND CONTOURS
-        # -------------------------------------------------------------
-
-        contours, _ = cv2.findContours(
-            mask,
-            cv2.RETR_EXTERNAL,
-            cv2.CHAIN_APPROX_SIMPLE
-        )
-
-        raw_counts[cid] = len(contours)
-
-
-        if len(contours) == 0:
-            continue
-
-
-        # -------------------------------------------------------------
-        # FIRST FILTER
-        #
-        # Area
-        # Aspect Ratio
-        # Fullness
-        # -------------------------------------------------------------
-
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        raw_counts[class_id] = len(contours)
         kept = []
-
-
         for contour in contours:
-
             area = cv2.contourArea(contour)
-
-            if area <= 0.0:
+            if area <= 0:
                 continue
-
-
-            # -------------------------
-            # AREA %
-            # -------------------------
-
-            area_pct = (
-                100.0 *
-                area /
-                frame_area
-            )
-
-
-            if (
-                area_pct < MIN_AREA_PCT or
-                area_pct > MAX_AREA_PCT
-            ):
+            area_pct = 100.0 * area / frame_area
+            if not (MIN_AREA_PCT <= area_pct <= MAX_AREA_PCT):
                 continue
-
-
-            # -------------------------
-            # BOUNDING RECTANGLE
-            # -------------------------
-
-            x, y, w, h = cv2.boundingRect(
-                contour
-            )
-
-
-            if w < 2 or h < 2:
+            x, y, w, h = cv2.boundingRect(contour)
+            if w < 2 or h < 2 or not (MIN_ASPECT <= float(w)/h <= MAX_ASPECT):
                 continue
-
-
-            # -------------------------
-            # WIDTH / HEIGHT
-            # -------------------------
-
-            aspect = float(w) / float(h)
-
-
-            if (
-                aspect < MIN_ASPECT or
-                aspect > MAX_ASPECT
-            ):
+            fullness = area / float(w*h)
+            if not (MIN_FULLNESS <= fullness <= MAX_FULLNESS):
                 continue
-
-
-            # -------------------------
-            # FULLNESS
-            #
-            # How much of the bounding
-            # rectangle contains the
-            # actual contour.
-            # -------------------------
-
-            rectangle_area = float(w * h)
-
-            if rectangle_area <= 0:
-                continue
-
-
-            fullness = area / rectangle_area
-
-
-            if (
-                fullness < MIN_FULLNESS or
-                fullness > MAX_FULLNESS
-            ):
-                continue
-
-
-            kept.append({
-                "contour": contour,
-                "area": area,
-                "area_pct": area_pct,
-
-                "x": x,
-                "y": y,
-                "w": w,
-                "h": h,
-
-                "fullness": fullness
-            })
-
-
-        if len(kept) == 0:
+            kept.append((area, contour, x, y, w, h, area_pct, fullness))
+        if not kept:
             continue
-
-
-        # -------------------------------------------------------------
-        # SORT LARGEST FIRST
-        # -------------------------------------------------------------
-
-        kept.sort(
-            key=lambda d: d["area"],
-            reverse=True
-        )
-
-
-        # -------------------------------------------------------------
-        # SMART SPECKLE REJECTION
-        #
-        # Relative to largest object OF THIS COLOR.
-        # -------------------------------------------------------------
-
-        largest_area = kept[0]["area"]
-
-        speckle_cutoff = (
-            largest_area *
-            SPECKLE_KEEP_RATIO
-        )
-
-
-        # -------------------------------------------------------------
-        # PROJECT EACH VALID ELEMENT ONTO FLOOR
-        # -------------------------------------------------------------
-
-        for item in kept:
-
-            if item["area"] < speckle_cutoff:
+        kept.sort(key=lambda item: item[0], reverse=True)
+        cutoff = kept[0][0] * SPECKLE_KEEP_RATIO
+        for area, contour, x, y, w, h, area_pct, fullness in kept:
+            if area < cutoff:
+                rejected_speckle += 1
                 continue
-
-
-            x = item["x"]
-            y = item["y"]
-
-            w = item["w"]
-            h = item["h"]
-
-
-            # Horizontal center
-            px = x + (w * 0.5)
-
-            # Bottom of detected ball.
-            # Better representation of ground contact point.
-            py = float(y + h)
-
-
-            ok, X, Y = groundProject(
-                px,
-                py,
-
-                cx,
-                cy,
-
-                fx,
-                fy,
-
-                cam_height,
-
-                sinp,
-                cosp
-            )
-
-
-            if not ok:
+            passed_contours += 1
+            robot_point = ground_project(x + w*0.5, y + h, cx, cy, fx, fy, camera)
+            if robot_point is None:
+                rejected_projection += 1
                 continue
-
-
-            distance = math.hypot(
-                X,
-                Y
-            )
-
-
-            if distance > MAX_RANGE_CM:
+            relative_x, relative_y = robot_point
+            distance_m = math.hypot(relative_x, relative_y)
+            if distance_m > MAX_RANGE_M:
+                rejected_range += 1
                 continue
-
-
+            dx, dy = rotate(relative_x, relative_y, robot_heading)
+            center_x, center_y = x + w*0.5, y + h*0.5
+            region = min(1, int(center_x*2/sw)) + 2*min(1, int(center_y*2/sh))
             detections.append({
-
-                "name": name,
-
-                "cid": cid,
-
-                "color": draw_color,
-
-                "contour": item["contour"],
-
-                "area": item["area"],
-
-                "area_pct": item["area_pct"],
-
-                "fullness": item["fullness"],
-
-                "x": x,
-                "y": y,
-                "w": w,
-                "h": h,
-
-                "X": X,
-                "Y": Y,
-
-                "distance": distance
+                "type": class_id, "name": name, "color": draw_color,
+                "contour": contour, "bbox": (x, y, w, h), "area": area,
+                "field_x": robot_x + dx, "field_y": robot_y + dy,
+                "confidence": estimate_confidence(area_pct, fullness, distance_m),
+                "region": region,
             })
 
+    # Preserve largest-contour Limelight target behavior.
+    detections.sort(key=lambda d: d["area"], reverse=True)
+    if detections:
+        best_contour = (detections[0]["contour"].astype(np.float32) / scale).astype(np.int32)
 
-    # =================================================================
-    # SORT ALL TARGETS
-    #
-    # Matches your Limelight "Largest" sorting setting.
-    # =================================================================
-
-    detections.sort(
-        key=lambda d: d["area"],
-        reverse=True
-    )
-
-
-    # =================================================================
-    # BEST CONTOUR
-    #
-    # This gives Limelight its normal "best target".
-    # =================================================================
-
-    if len(detections) > 0:
-
-        best_contour = scaleContour(
-            detections[0]["contour"],
-            inverse_scale
-        )
-
-
-    # =================================================================
-    # BUILD FTC OUTPUT
-    #
-    # Index 0:
-    # number actually reported
-    #
-    # Then:
-    #
-    # type, X, Y
-    # type, X, Y
-    # ...
-    #
-    # =================================================================
-
-    reported_count = min(
-        len(detections),
-        MAX_REPORTED
-    )
-
-
-    llpython[0] = float(
-        reported_count
-    )
-
-
-    for i in range(reported_count):
-
-        detection = detections[i]
-
-        base = 1 + (i * 3)
-
-        llpython[base] = float(
-            detection["cid"]
-        )
-
-        llpython[base + 1] = float(
-            detection["X"]
-        )
-
-        llpython[base + 2] = float(
-            detection["Y"]
-        )
-
-
-    # Last value tells Control Hub how many objects
-    # existed before the 10-object reporting limit.
-
-    llpython[31] = float(
-        len(detections)
-    )
-
-
-    # =================================================================
-    # DRAW DETECTIONS
-    # =================================================================
+    update_tracks(detections, now)
+    selected = choose_tracks(now)
+    for index, (track_id, track) in enumerate(selected):
+        base = index * VALUES_PER_ELEMENT
+        llpython[base:base + VALUES_PER_ELEMENT] = [
+            float(track_id), track["field_x"], track["field_y"], track["confidence"]
+        ]
+        track["last_sent"] = now
 
     output = image.copy()
-
-
-    for index, detection in enumerate(detections):
-
-        x = int(
-            detection["x"] *
-            inverse_scale
-        )
-
-        y = int(
-            detection["y"] *
-            inverse_scale
-        )
-
-        w = int(
-            detection["w"] *
-            inverse_scale
-        )
-
-        h = int(
-            detection["h"] *
-            inverse_scale
-        )
-
-
-        color = detection["color"]
-
-
-        cv2.rectangle(
-            output,
-
-            (x, y),
-
-            (x + w, y + h),
-
-            color,
-
-            2
-        )
-
-
-        label = "{} X:{:.0f} Y:{:.0f}".format(
-
-            detection["name"],
-
-            detection["X"],
-
-            detection["Y"]
-        )
-
-
-        cv2.putText(
-            output,
-
-            label,
-
-            (
-                x,
-                max(15, y - 5)
-            ),
-
-            FONT,
-
-            0.45,
-
-            color,
-
-            1,
-
-            cv2.LINE_AA
-        )
-
-
-    # =================================================================
-    # DEBUG TERMINAL OUTPUT
-    #
-    # This is the part your previous script was missing.
-    # Returning llpython DOES NOT automatically print it.
-    # =================================================================
-
-    if (
-        DEBUG and
-        frame_counter % DEBUG_EVERY_N_FRAMES == 0
-    ):
-
-        print(
-            "[VISION] Raw contours "
-            "Y:{} B:{} R:{} | Valid:{} | Returned:{}".format(
-
-                raw_counts[1],
-                raw_counts[2],
-                raw_counts[3],
-
-                len(detections),
-
-                reported_count
-            )
-        )
-
-
-        if reported_count > 0:
-
-            for i in range(reported_count):
-
-                d = detections[i]
-
-                print(
-                    "  {}: {}  X={:.1f}cm Y={:.1f}cm Dist={:.1f}cm Area={:.4f}%".format(
-
-                        i,
-
-                        d["name"],
-
-                        d["X"],
-
-                        d["Y"],
-
-                        d["distance"],
-
-                        d["area_pct"]
-                    )
-                )
-
-
+    for det in detections:
+        x, y, w, h = det["bbox"]
+        x, y, w, h = [int(round(value / scale)) for value in (x, y, w, h)]
+        cv2.rectangle(output, (x, y), (x+w, y+h), det["color"], 2)
+        label = "{} ({:.0f},{:.0f}) C:{:.2f}".format(
+            det["name"], det["field_x"], det["field_y"], det["confidence"])
+        cv2.putText(output, label, (x, max(15, y-5)), FONT, 0.4,
+                    det["color"], 1, cv2.LINE_AA)
+    if DEBUG and frame_counter % DEBUG_EVERY_N_FRAMES == 0:
+        print("[BIOBUZZ] Frame:{} | Raw Y:{} B:{} R:{} | Valid:{} | "
+              "Active tracks:{} | Output:{} | Length:{}".format(
+            frame_counter, raw_counts.get(1, 0), raw_counts.get(2, 0),
+            raw_counts.get(3, 0), len(detections), len(tracks),
+            len(selected), len(llpython)))
+        print("  Robot field pose: X={:.1f}m Y={:.1f}m Heading={:.2f}rad".format(
+            robot_x, robot_y, robot_heading))
+        print("  Camera: Fwd={:.1f}m Left={:.1f}m Height={:.1f}m "
+              "Pitch={:.1f}deg Yaw={:.1f}deg".format(
+            cam_fwd, cam_left, cam_h, cam_pitch, cam_yaw))
+        print("  Filter stages: contour passed={} | speckle rejected={} | "
+              "projection rejected={} | distance rejected={}".format(
+            passed_contours, rejected_speckle,
+            rejected_projection, rejected_range))
+        if not detections:
+            print("  No objects survived filtering; see counts above.")
         else:
-
-            print(
-                "  No objects survived filtering."
-            )
-
-
-    # =================================================================
-    # RETURN TO LIMELIGHT
-    # =================================================================
-
+            for index, (track_id, track) in enumerate(selected[:DEBUG_MAX_ELEMENTS]):
+                print("  {:02d}: ID={} {} X={:.1f}m Y={:.1f}m "
+                      "Confidence={:.3f} Region={}".format(
+                    index, track_id, track["name"], track["field_x"],
+                    track["field_y"], track["confidence"], track["region"]))
+            if len(selected) > DEBUG_MAX_ELEMENTS:
+                print("  ... {} additional output elements not printed".format(
+                    len(selected) - DEBUG_MAX_ELEMENTS))
+        print("  Output test: {} doubles, {} populated, {} empty slots".format(
+            len(llpython), len(selected), MAX_REPORTED - len(selected)))
     return best_contour, output, llpython
