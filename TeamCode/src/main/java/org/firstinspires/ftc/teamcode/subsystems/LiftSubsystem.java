@@ -6,6 +6,8 @@ import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 
 public class LiftSubsystem implements Subsystem {
+    double targetPos = 0;
+    boolean enablePID =false;
     public final ServoEx liftServo1;
     public final ServoEx liftServo2;
     public final MotorEx liftEncoder;
@@ -23,7 +25,20 @@ public class LiftSubsystem implements Subsystem {
     public void setLiftBoth(double Power){
         liftServo1.set(Power);
         liftServo2.set(Power);}
-    public void getEncoderPosition(){
+    public void getCurrentPosition(){
         liftEncoder.encoder.getPosition();
+    }
+    public void setTargetPos(double wuntedtargetPos){
+
+        targetPos=(wuntedtargetPos);
+    }
+    public double getTargetPos(){
+        return( targetPos);
+    }
+    public void setEnablePID(boolean isEnabled){
+        enablePID =isEnabled;
+    }
+    public boolean getEnablePID(){
+        return enablePID;
     }
 }
