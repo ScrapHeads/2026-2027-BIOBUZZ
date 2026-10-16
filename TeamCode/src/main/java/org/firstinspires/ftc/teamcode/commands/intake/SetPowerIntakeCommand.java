@@ -21,7 +21,6 @@ public class SetPowerIntakeCommand extends CommandBase {
     }
     @Override
     public boolean isFinished(){
-
         return true;
     }
 

@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.REFRESH_TABLE;
 import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.enablePID;
 import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.pidfValues;
 import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.targetPower;
 import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.targetRPM;
+import static org.firstinspires.ftc.teamcode.config.RobotConstants.*;
 import static org.firstinspires.ftc.teamcode.util.PIDUtil.updatePIDController;
 
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -13,12 +15,18 @@ import com.seattlesolvers.solverslib.controller.PIDFController;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
+import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Pose2d;
+import org.firstinspires.ftc.teamcode.RilLib.Math.Interpolation.InterpolatingTreeMap;
+import org.firstinspires.ftc.teamcode.RobotState;
 import org.firstinspires.ftc.teamcode.config.FlywheelConfig;
+import org.firstinspires.ftc.teamcode.util.FlywheelInterpolation;
 
 public class FlyWheelSubsystem implements Subsystem {
     private static MotorEx flywheel;
     private final PIDFController controller;
     private final MultipleTelemetry telemetry;
+
+    private final FlywheelInterpolation flywheelInterpolator = new FlywheelInterpolation();
 
     public static final double MOTOR_TPR = 1; //todo
 
@@ -74,6 +82,42 @@ public class FlyWheelSubsystem implements Subsystem {
         return enablePID;
     }
 
+    public void calcTargetRPM (double distanceCm) {
+        double targetRPM;
+
+        if (REFRESH_TABLE) {
+            targetRPM = flywheelInterpolator.getRPMRefresh(distanceCm);
+        } else {
+            targetRPM = flywheelInterpolator.getRPM(distanceCm);
+        }
+
+        if (targetRPM != -1) {
+            FlywheelConfig.targetRPM = targetRPM;
+        }
+    }
+
+    public double getDistance () {
+        boolean blueTeam = RobotState.getInstance().isBlueTeam();
+
+        Pose2d tagLocation;
+
+        if (blueTeam) {
+            if (isFrontGoal) {
+                tagLocation = BLUE_FRONT_GOAL;
+            } else {
+                tagLocation = BLUE_BACK_GOAL;
+            }
+        } else {
+            if (isFrontGoal) {
+                tagLocation = RED_FRONT_GOAL;
+            } else {
+                tagLocation = RED_BACK_GOAL;
+            }
+        }
+        double distance = 100 * RobotState.getInstance().getEstimatedPose().getTranslation().getDistance(tagLocation.getTranslation());
+        return distance - CENTER_TO_FRONT_OFFSET_CM;
+    }
+
     private void sendTelemetry () {
         telemetry.addData("Current RPM: ", getRPM());
         telemetry.addData("Is PID controller on: ", getEnablePID());
@@ -84,6 +128,7 @@ public class FlyWheelSubsystem implements Subsystem {
         updatePIDController(controller, pidfValues);
 
         if (enablePID) {
+            calcTargetRPM(getDistance());
             double pidOut = controller.calculate(getRPM(), targetRPM);
             setPower(pidOut);
         } else {

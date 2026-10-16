@@ -14,26 +14,26 @@ import math
 import time
 
 # Camera settings: defaults only used for missing mounting inputs.
-CAM_HEIGHT_M = 0.25
-CAM_PITCH_DEG = 20.0
-CAM_FWD_M = 0.15
+CAM_HEIGHT_M = 0.040
+CAM_PITCH_DEG = 60.0
+CAM_FWD_M = 0.0
 CAM_LEFT_M = 0.0
 CAM_YAW_DEG = 0.0
 HFOV_DEG = 54.5
 VFOV_DEG = 42.0
 
-PROC_WIDTH = 320
+PROC_WIDTH = 640
 BLUR_KSIZE = 2
-MAX_RANGE_M = 0.300
-MIN_AREA_PCT = 0.015
-MAX_AREA_PCT = 7.4818
-MIN_FULLNESS = 0.30
-MAX_FULLNESS = 0.99
-MIN_ASPECT = 0.0
-MAX_ASPECT = 3.0
+MAX_RANGE_M = 3.00
+MIN_AREA_PCT = 0.03
+MAX_AREA_PCT = 1.9
+MIN_FULLNESS = 0.15
+MAX_FULLNESS = 0.9
+MIN_ASPECT = 0.5
+MAX_ASPECT = 1.90
 EROSION_STEPS = 1
 DILATION_STEPS = 1
-SPECKLE_KEEP_RATIO = 0.20
+SPECKLE_KEEP_RATIO = 0.03
 
 OUTPUT_SIZE = 120
 VALUES_PER_ELEMENT = 4
@@ -46,18 +46,26 @@ MIN_CAMERA_HEIGHT_M = 0.0001
 TRACK_TIMEOUT_SEC = 2.0
 MATCH_GATE_M = 0.25
 MIN_CONFIDENCE = 0.0
-CONFIDENCE_DISTANCE_SCALE_M = .200
+CONFIDENCE_DISTANCE_SCALE_M = 3
 # Use measured ball area at known range to calibrate size consistency later.
 # For now, area is used as a relative visibility term, not calibrated probability.
 AREA_CONFIDENCE_SCALE_PCT = 0.20
+
+EXPECTED_FULLNESS = 0.785
+
+SIZE_WEIGHT = 0.30
+FULLNESS_WEIGHT = 0.30
+DISTANCE_WEIGHT = 0.40
+
+
 DEBUG = True
 DEBUG_EVERY_N_FRAMES = 15
 DEBUG_MAX_ELEMENTS = 30  # Maximum individual detections to print per debug cycle.
 
 # Original HSV values and drawing colors, unchanged.
 CLASS_DEFS = [
-    ("POLLEN_Y", 1, (23, 192, 33), (37, 255, 255), None, None, (0, 255, 255)),
-    ("NECTAR_B", 2, (120, 220, 0), (125, 255, 50), None, None, (255, 140, 0)),
+    ("POLLEN_Y", 1, (16, 220, 40), (27, 255, 255), None, None, (0, 255, 255)),
+    ("NECTAR_B", 2, (110, 220, 1), (121, 255, 255), None, None, (255, 140, 0)),
     ("NECTAR_R", 3, (0, 228, 13), (1, 255, 122), None, None, (0, 0, 255)),
 ]
 MORPH_K = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
@@ -77,7 +85,7 @@ def read_inputs(llrobot):
     A zero-valued camera X/Y or yaw is legitimate. An absent/zero camera
     height is not; treat it as a signal that calibration has not been sent.
     """
-    values = [0.0, 0.0, 0.0, CAM_FWD_M, CAM_LEFT_M,
+    values = [0.0, 0.0, 0.785398, CAM_FWD_M, CAM_LEFT_M,
               CAM_HEIGHT_M, CAM_PITCH_DEG, CAM_YAW_DEG]
     if llrobot is None:
         return values
@@ -126,8 +134,17 @@ def ground_project(px, py, cx, cy, fx, fy, camera):
 def estimate_confidence(area_pct, fullness, distance_m):
     """Heuristic positional reliability, NOT a calibrated probability."""
     size_score = area_pct / (area_pct + AREA_CONFIDENCE_SCALE_PCT)
+    fullness_score = max(
+    0.0,
+    1.0 - abs(fullness - EXPECTED_FULLNESS) / EXPECTED_FULLNESS
+    )
     range_score = 1.0 / (1.0 + (distance_m / CONFIDENCE_DISTANCE_SCALE_M)**2)
-    return max(MIN_CONFIDENCE, min(1.0, size_score * fullness * range_score))
+    confidence = (
+        SIZE_WEIGHT * size_score +
+        FULLNESS_WEIGHT * fullness_score +
+        DISTANCE_WEIGHT * range_score
+    )
+    return max(MIN_CONFIDENCE, confidence)
 
 
 def update_tracks(detections, now):

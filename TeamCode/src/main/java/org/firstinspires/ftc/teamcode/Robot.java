@@ -29,7 +29,7 @@ public class Robot {
 
         multipleTelemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
-        intake = new IntakeSubsystem(hm);
+        intake = new IntakeSubsystem(hm, multipleTelemetry);
         intake.register();
 
         transfer = new TransferSubsystem(hm);

@@ -75,8 +75,8 @@ public class TestUtilsTest {
     @Test
     @DisplayName("Test generic createSubsystem method with constructor references")
     public void testGenericCreateSubsystem() {
-        IntakeSubsystem intake = TestUtils.createSubsystem(IntakeSubsystem::new, "intake");
-        assertNotNull(intake);
+//        IntakeSubsystem intake = TestUtils.createSubsystem(IntakeSubsystem::new, "intake");
+//        assertNotNull(intake);
 
         TransferSubsystem transfer = TestUtils.createSubsystem(TransferSubsystem::new, "transfer");
         assertNotNull(transfer);

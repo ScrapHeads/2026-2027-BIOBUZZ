@@ -15,8 +15,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Pose2d;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Rotation2d;
+import org.firstinspires.ftc.teamcode.RilLib.Math.MathUtil;
 import org.firstinspires.ftc.teamcode.RilLib.Math.VecBuilder;
 import org.firstinspires.ftc.teamcode.RobotState;
+import org.firstinspires.ftc.teamcode.util.ConversionUtil;
 import org.firstinspires.ftc.teamcode.vision.CameraPose;
 import org.firstinspires.ftc.teamcode.vision.tracking.LimelightOutputReader;
 import org.firstinspires.ftc.teamcode.util.TimeTracker;
@@ -100,8 +102,8 @@ public class VisionSubsystem implements Subsystem {
 
             // Fillers to test the system set these to what pose is needed for testing
             // They should both be in meters and degrees
-            rs.addOdometryObservation(new Pose2d(0, 0, new Rotation2d(0)), TimeTracker.getTime());
-            rs.setCameraPose(new CameraPose(1, 1, 1, .25, 20));
+            rs.addOdometryObservation(new Pose2d(0, 0, new Rotation2d(.785398)), TimeTracker.getTime());
+            rs.setCameraPose(new CameraPose(0, 0, .040, 60, 0));
 
             LimelightPythonInput input = new LimelightPythonInput(rs.getEstimatedPose(), rs.getCameraPose());
             limelight.updatePythonInputs(input.toArray());
