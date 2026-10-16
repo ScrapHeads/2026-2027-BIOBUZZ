@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.util;
 
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -234,8 +235,20 @@ public class TestUtils {
             Object unsafe = unsafeField.get(null);
 
             java.lang.reflect.Method allocateInstance = unsafeClass.getMethod("allocateInstance", Class.class);
-            return (com.qualcomm.hardware.limelightvision.Limelight3A)
-                    allocateInstance.invoke(unsafe, com.qualcomm.hardware.limelightvision.Limelight3A.class);
+            com.qualcomm.hardware.limelightvision.Limelight3A mockLimelight =
+                    (com.qualcomm.hardware.limelightvision.Limelight3A) allocateInstance.invoke(unsafe, com.qualcomm.hardware.limelightvision.Limelight3A.class);
+
+            // Initialize 'state' field to prevent NPE on state.compareAndSet()
+            java.lang.reflect.Field stateField = com.qualcomm.hardware.limelightvision.Limelight3A.class.getDeclaredField("state");
+            stateField.setAccessible(true);
+            stateField.set(mockLimelight, new java.util.concurrent.atomic.AtomicInteger(0));
+
+            // Initialize 'executorLock' field
+            java.lang.reflect.Field lockField = com.qualcomm.hardware.limelightvision.Limelight3A.class.getDeclaredField("executorLock");
+            lockField.setAccessible(true);
+            lockField.set(mockLimelight, new Object());
+
+            return mockLimelight;
         } catch (Exception e) {
             throw new RuntimeException("Failed to allocate mock Limelight3A", e);
         }
@@ -261,6 +274,10 @@ public class TestUtils {
             builder.withServo(name);
         }
         return builder.build();
+    }
+
+    public static MultipleTelemetry getMultipleTelemetry () {
+        return new MultipleTelemetry(createMockTelemetry(), startMockDashboard().getTelemetry());
     }
 
     //----------------------------------------------------------------------------------------------
@@ -309,13 +326,13 @@ public class TestUtils {
         return subsystem;
     }
 
-    // Convenience methods retained for backwards compatibility
-    public static IntakeSubsystem createDummyIntakeSubsystem() {
-        return createSubsystem(IntakeSubsystem::new, "intake");
-    }
-
-    public static TransferSubsystem createDummyTransferSubsystem() {
-        return createSubsystem(TransferSubsystem::new, "transfer");
+    // Add to TestUtils.java
+    public static <T extends Subsystem> T createSubsystem(
+            java.util.function.BiFunction<HardwareMap, MultipleTelemetry, T> constructor,
+            HardwareMap hardwareMap) {
+        T subsystem = constructor.apply(hardwareMap, getMultipleTelemetry());
+        subsystem.register();
+        return subsystem;
     }
 
     /**

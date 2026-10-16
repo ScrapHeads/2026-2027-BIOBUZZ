@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.commands.turretpos;
 
 import com.seattlesolvers.solverslib.command.CommandBase;
 
-import org.firstinspires.ftc.teamcode.subsystems.samples.TurretRotSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.TurretRotSubsystem;
 
 public class SetPosTurretCommand extends CommandBase {
 

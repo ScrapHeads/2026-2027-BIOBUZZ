@@ -14,7 +14,7 @@ public class SetPowerTransferCommandTest {
         TestUtils.MockHardwareMap hardwareMap = new TestUtils.HardwareMapBuilder()
                 .withMotor("transfer")
                 .build();
-        return TestUtils.createDummyTransferSubsystem();
+        return TestUtils.createSubsystem(TransferSubsystem::new, hardwareMap);
     }
 
     @Test

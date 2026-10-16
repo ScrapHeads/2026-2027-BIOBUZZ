@@ -1,9 +1,8 @@
-package org.firstinspires.ftc.teamcode.subsystems.samples;
+package org.firstinspires.ftc.teamcode.subsystems;
 
 import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.enablePID;
 import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.pidfValues;
 import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.targetPower;
-import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.targetRPM;
 import static org.firstinspires.ftc.teamcode.config.pedro.TurretPosConfig.targetPos;
 import static org.firstinspires.ftc.teamcode.util.PIDUtil.updatePIDController;
 
@@ -17,7 +16,7 @@ import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import org.firstinspires.ftc.teamcode.config.pedro.TurretPosConfig;
 
 public class TurretRotSubsystem implements Subsystem {
-    private static MotorEx turretRot;
+    private final MotorEx turretRot;
 
     private final PIDFController controller;
 
@@ -33,7 +32,7 @@ public class TurretRotSubsystem implements Subsystem {
 
         this.telemetry = telemetry;
 
-        turretRot.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT)
+        turretRot.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         turretRot.encoder.reset();
 
         controller= new PIDFController(

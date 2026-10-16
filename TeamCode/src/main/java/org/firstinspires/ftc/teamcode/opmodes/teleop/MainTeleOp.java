@@ -17,7 +17,6 @@ import org.firstinspires.ftc.teamcode.config.VisionConstants;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.commands.transfer.SetPowerTransferCommand;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
-import org.firstinspires.ftc.teamcode.vision.VisionStateManager;
 
 
 @TeleOp(name = "MainTeleOp", group = "ScrapHeads")
@@ -59,7 +58,7 @@ public class MainTeleOp extends CommandOpMode {
         driver1.getGamepadButton(DPAD_RIGHT)
                 .whenPressed(new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_POWER));
         driver1.getGamepadButton(DPAD_LEFT)
-                .whenPressed(new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.OUTAKE_POWER));
+                .whenPressed(new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.OUTTAKE_POWER));
 
         driver1.getGamepadButton(DPAD_UP)
                 .whenPressed(new SetPowerTransferCommand(robot.transfer, TransferSubsystem.INTAKE_POWER));

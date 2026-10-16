@@ -5,18 +5,20 @@ import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
 public class TransferSubsystem implements Subsystem {
+    private final MotorEx transfer;
+
     public static final double INTAKE_POWER = 1;
     public static final double OUTTAKE_POWER = -1;
-    private static MotorEx transfer;
+
     public TransferSubsystem(HardwareMap hm) {
         transfer = new MotorEx (hm, "transfer");
     }
+
      public void setPower (double power) {
         transfer.set(power);
     }
+
     public double getPower (){
         return transfer.get();
     }
-
-
 }
