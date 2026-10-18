@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.util.StateIO;
 public class Robot {
     public final HardwareMap hm;
     public final Telemetry telemetry;
-    public final FtcDashboard dashboard;
+    public static final FtcDashboard dashboard = FtcDashboard.getInstance();
     public final MultipleTelemetry multipleTelemetry;
     public final StateIO state;
 
@@ -25,7 +25,6 @@ public class Robot {
     public Robot (HardwareMap hm, Telemetry telemetry) {
         this.hm = hm;
         this.telemetry = telemetry;
-        this.dashboard = FtcDashboard.getInstance();
 
         multipleTelemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
