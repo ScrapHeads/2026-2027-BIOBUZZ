@@ -26,7 +26,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Tuning;
 public class Constants {
     public static MecanumConfig drivetrainConfig = new MecanumConfig(c -> {
         c.frontLeftName.set("lf");
-        c.backLeftName.set("lr");
+        c.backLeftName.set("lb");
         c.frontRightName.set("rf");
         c.backRightName.set("rb");
 
