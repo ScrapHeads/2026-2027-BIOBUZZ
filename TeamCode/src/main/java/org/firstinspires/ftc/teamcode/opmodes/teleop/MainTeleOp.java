@@ -12,6 +12,7 @@ import static com.seattlesolvers.solverslib.gamepad.GamepadKeys.Button.*;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Robot;
+import org.firstinspires.ftc.teamcode.commands.drive.DriveContinuous;
 import org.firstinspires.ftc.teamcode.commands.intake.SetPowerIntakeCommand;
 import org.firstinspires.ftc.teamcode.config.VisionConstants;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
@@ -47,14 +48,15 @@ public class MainTeleOp extends CommandOpMode {
     public void run() {
         super.run(); // VERY IMPORTANT: runs the CommandScheduler on every loop cycle
 
-        // Add any telemetry data you want updated every loop cycle
-        robot.getTelemetry().addData("Loop Status", "Running");
-
         // Flushes telemetry updates to BOTH Driver Hub and FTC Dashboard
         robot.getTelemetry().update();
     }
 
     public void  assignControls() {
+        robot.drivetrain.setDefaultCommand(new DriveContinuous(
+                robot.drivetrain, driver1, robot.multipleTelemetry, 1
+        ));
+
         driver1.getGamepadButton(DPAD_RIGHT)
                 .whenPressed(new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_POWER));
         driver1.getGamepadButton(DPAD_LEFT)

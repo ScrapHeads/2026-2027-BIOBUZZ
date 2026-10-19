@@ -53,7 +53,7 @@ public class DrivetrainLocalizer implements Localizer {
 
     @Override
     public Pose pose() {
-        return pinpoint.pose();
+        return pedroPose;
     }
 
     @Override

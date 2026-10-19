@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.enablePID;
 import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.pidfValues;
 import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.targetPower;
-import static org.firstinspires.ftc.teamcode.config.pedro.TurretPosConfig.targetPos;
+import static org.firstinspires.ftc.teamcode.config.TurretPosConfig.targetPos;
 import static org.firstinspires.ftc.teamcode.util.PIDUtil.updatePIDController;
 
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -13,7 +13,7 @@ import com.seattlesolvers.solverslib.controller.PIDFController;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
-import org.firstinspires.ftc.teamcode.config.pedro.TurretPosConfig;
+import org.firstinspires.ftc.teamcode.config.TurretPosConfig;
 
 public class TurretRotSubsystem implements Subsystem {
     private final MotorEx turretRot;

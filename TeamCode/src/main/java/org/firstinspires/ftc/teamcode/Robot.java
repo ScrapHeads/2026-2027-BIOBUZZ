@@ -5,6 +5,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.subsystems.DrivetrainSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.FlyWheelSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
@@ -18,6 +19,8 @@ public class Robot {
     public final MultipleTelemetry multipleTelemetry;
     public final StateIO state;
 
+    public final DrivetrainSubsystem drivetrain;
+
     public final TransferSubsystem transfer;
     public final IntakeSubsystem intake;
     public final VisionSubsystem vision;
@@ -27,6 +30,9 @@ public class Robot {
         this.telemetry = telemetry;
 
         multipleTelemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
+
+        drivetrain = new DrivetrainSubsystem(hm, multipleTelemetry);
+        drivetrain.register();
 
         intake = new IntakeSubsystem(hm, multipleTelemetry);
         intake.register();
