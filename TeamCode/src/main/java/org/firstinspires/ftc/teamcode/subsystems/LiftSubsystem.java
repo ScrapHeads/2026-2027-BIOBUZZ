@@ -20,11 +20,15 @@ public class LiftSubsystem implements Subsystem {
     }
     public void setLiftServo1Power(double power){
         liftServo1.set(power);}
-    public double getLiftServo1Power(){return liftServo1.get();}
+    public double getLiftServo1Power() {
+        return liftServo1.get();
+    }
     public void setLiftServo2Power(double power){
         liftServo2.set(power);
     }
-    public double getLiftServo2Power(){return liftServo2.get();}
+    public double getLiftServo2Power() {
+        return liftServo2.get();
+    }
     public void setLiftBoth(double power1, double power2){
         liftServo1.set(power1);
         liftServo2.set(power2);
@@ -36,7 +40,7 @@ public class LiftSubsystem implements Subsystem {
         targetPos = newTargetPos;
     }
     public double getTargetPos(){
-        return(targetPos);
+        return targetPos;
     }
     public void setEnablePID(boolean isEnabled){
         enablePID = isEnabled;

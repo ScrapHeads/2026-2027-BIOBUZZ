@@ -14,10 +14,12 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.commands.drive.DriveContinuous;
 import org.firstinspires.ftc.teamcode.commands.intake.SetPowerIntakeCommand;
+import org.firstinspires.ftc.teamcode.commands.turretstopper.TurretStopperCommand;
 import org.firstinspires.ftc.teamcode.config.VisionConstants;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.commands.transfer.SetPowerTransferCommand;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.TurretStopperSubsystem;
 
 
 @TeleOp(name = "MainTeleOp", group = "ScrapHeads")
@@ -73,9 +75,14 @@ public class MainTeleOp extends CommandOpMode {
                         new SetPowerIntakeCommand(robot.intake, 0)
                 ));
 
+//        driver1.getGamepadButton(X)
+//                .whenPressed(new InstantCommand(() -> robot.vision.setPipeline(VisionConstants.GAME_ELEMENT_TRACKER_PIPELINE)));
+//        driver1.getGamepadButton(B)
+//                .whenPressed(new InstantCommand(() -> robot.vision.setPipeline(VisionConstants.APRIL_TAG_PIPELINE)));
+
         driver1.getGamepadButton(X)
-                .whenPressed(new InstantCommand(() -> robot.vision.setPipeline(VisionConstants.GAME_ELEMENT_TRACKER_PIPELINE)));
+                .whenPressed(new TurretStopperCommand(robot.turretStopper, TurretStopperSubsystem.OPEN_POS));
         driver1.getGamepadButton(B)
-                .whenPressed(new InstantCommand(() -> robot.vision.setPipeline(VisionConstants.APRIL_TAG_PIPELINE)));
+                .whenPressed(new TurretStopperCommand(robot.turretStopper, TurretStopperSubsystem.CLOSED_POS));
     }
 }

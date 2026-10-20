@@ -9,6 +9,7 @@ import org.firstinspires.ftc.teamcode.subsystems.DrivetrainSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.FlyWheelSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.TurretStopperSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.VisionSubsystem;
 import org.firstinspires.ftc.teamcode.util.StateIO;
 
@@ -24,6 +25,7 @@ public class Robot {
     public final TransferSubsystem transfer;
     public final IntakeSubsystem intake;
     public final VisionSubsystem vision;
+    public final TurretStopperSubsystem turretStopper;
 
     public Robot (HardwareMap hm, Telemetry telemetry) {
         this.hm = hm;
@@ -42,6 +44,8 @@ public class Robot {
 
         vision = new VisionSubsystem(hm, multipleTelemetry, dashboard);
         vision.register();
+
+        turretStopper = new TurretStopperSubsystem(hm);
 
         state = new StateIO(multipleTelemetry, dashboard);
     }
