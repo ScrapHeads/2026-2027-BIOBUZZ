@@ -16,11 +16,9 @@ public class IntakeSubsystem implements Subsystem {
     public volatile static boolean DASHBOARD_CONTROL = false;
     public volatile static double DASHBOARD_POWER = 0.0;
 
-    public static final double INTAKE_POWER = .55;
-    public static final double OUTTAKE_POWER = -.55;
+    public static final double INTAKE_POWER = 1;
+    public static final double OUTTAKE_POWER = -1;
     public static final double STOP_POWER = 0;
-
-    private double loopCount = 0;
 
     /** Instance of params for this launcher. */
     public IntakeSubsystem(HardwareMap hm, MultipleTelemetry telemetry){
@@ -49,7 +47,6 @@ public class IntakeSubsystem implements Subsystem {
     }
 
     private void sendTelemetry () {
-        telemetry.addData("Loop count", ++loopCount);
         telemetry.addData("Intake Target Power", power);
         telemetry.addData("Intake Actual Power", intake.get());
         telemetry.addData("Dashboard Power On", DASHBOARD_CONTROL);

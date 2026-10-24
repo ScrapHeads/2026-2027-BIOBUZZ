@@ -12,8 +12,8 @@ public class IntakeSubsystemTest {
     public IntakeSubsystem createIntakeSubsystem() {
         TestUtils.MockHardwareMap hardwareMap = new TestUtils.HardwareMapBuilder()
                 .withMotor("intake")
-
                 .build();
+
         return TestUtils.createSubsystem(IntakeSubsystem::new, hardwareMap);
     }
 

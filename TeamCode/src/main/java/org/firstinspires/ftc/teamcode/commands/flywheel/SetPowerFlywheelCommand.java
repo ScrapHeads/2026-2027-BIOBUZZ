@@ -7,7 +7,6 @@ import org.firstinspires.ftc.teamcode.subsystems.FlyWheelSubsystem;
 public class SetPowerFlywheelCommand extends CommandBase {
 
     private final FlyWheelSubsystem flyWheel;
-
     private final double power;
 
     public SetPowerFlywheelCommand(FlyWheelSubsystem flyWheel,double power){
@@ -17,15 +16,12 @@ public class SetPowerFlywheelCommand extends CommandBase {
         addRequirements(flyWheel);
     }
     @Override
-    public void initialize(){flyWheel.setPower(power);}
-
-    @Override
-    public void end(boolean interrupted){
-
+    public void initialize() {
+        flyWheel.setPower(power);
     }
+
     @Override
     public boolean isFinished(){
-
         return true;
     }
 }
