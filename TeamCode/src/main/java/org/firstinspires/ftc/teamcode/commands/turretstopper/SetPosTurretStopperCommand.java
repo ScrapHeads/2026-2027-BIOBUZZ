@@ -5,13 +5,13 @@ import com.seattlesolvers.solverslib.command.Subsystem;
 
 import org.firstinspires.ftc.teamcode.subsystems.TurretStopperSubsystem;
 
-public class TurretStopperCommand extends CommandBase {
+public class SetPosTurretStopperCommand extends CommandBase {
 
     private final TurretStopperSubsystem turretStopper;
 
     private final double pos;
 
-    public TurretStopperCommand(TurretStopperSubsystem turretStopper, double pos){
+    public SetPosTurretStopperCommand(TurretStopperSubsystem turretStopper, double pos){
 
         this.turretStopper = turretStopper;
         this.pos = pos;

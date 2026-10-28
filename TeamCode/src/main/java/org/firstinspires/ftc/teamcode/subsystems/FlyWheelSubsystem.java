@@ -1,16 +1,12 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.REFRESH_TABLE;
-import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.enablePID;
-import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.pidfValues;
-import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.targetPower;
-import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.targetRPM;
+import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.*;
 import static org.firstinspires.ftc.teamcode.config.RobotConstants.*;
 import static org.firstinspires.ftc.teamcode.util.PIDUtil.updatePIDController;
 
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.seattlesolvers.solverslib.command.Subsystem;
+import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.controller.PIDFController;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
@@ -21,21 +17,25 @@ import org.firstinspires.ftc.teamcode.RobotState;
 import org.firstinspires.ftc.teamcode.config.FlywheelConfig;
 import org.firstinspires.ftc.teamcode.util.FlywheelInterpolation;
 
-public class FlyWheelSubsystem implements Subsystem {
-    private static MotorEx flywheel;
+public class FlyWheelSubsystem extends SubsystemBase {
+    private final MotorEx flywheel;
     private final PIDFController controller;
     private final MultipleTelemetry telemetry;
 
-    private final FlywheelInterpolation flywheelInterpolator = new FlywheelInterpolation();
+    private final FlywheelInterpolation flywheelInterpolator;
 
-    public static final double MOTOR_TPR = 1; //todo
+    public static final double MOTOR_TPR = 28;
 
-    public static final double GEAR_RATIO = 1.0/3.0; //todo
+    public static final double GEAR_RATIO = 1.0/3.0;
 
     public static final double TICKS_PER_REV = MOTOR_TPR / GEAR_RATIO;
 
     public FlyWheelSubsystem(HardwareMap hm, MultipleTelemetry telemetry) {
         flywheel = new MotorEx(hm, "flywheel");
+
+        flywheelInterpolator = new FlywheelInterpolation();
+
+        targetPower = 0.0;
 
         this.telemetry = telemetry;
 
@@ -53,7 +53,8 @@ public class FlyWheelSubsystem implements Subsystem {
     }
 
     public void setPower(double power) {
-        flywheel.set(Math.max(-1.0, Math.min(1.0, power)));
+        flywheel.set(power);
+//        flywheel.set(Math.max(-1.0, Math.min(1.0, power)));
     }
 
     public double getPower () {
@@ -128,8 +129,11 @@ public class FlyWheelSubsystem implements Subsystem {
         updatePIDController(controller, pidfValues);
 
         if (enablePID) {
-            calcTargetRPM(getDistance());
+            if (setByDistance) {
+                calcTargetRPM(getDistance());
+            }
             double pidOut = controller.calculate(getRPM(), targetRPM);
+            pidOut = pidOut > 0 ? pidOut : 0;
             setPower(pidOut);
         } else {
             setPower(targetPower);
