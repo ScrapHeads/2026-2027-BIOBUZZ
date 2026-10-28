@@ -65,9 +65,9 @@ public class MainTeleOp extends CommandOpMode {
                 .whenPressed(new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.OUTTAKE_POWER));
 
         driver1.getGamepadButton(DPAD_UP)
-                .whenPressed(new SetPowerTransferCommand(robot.transfer, TransferSubsystem.INTAKE_POWER));
+                .whenPressed(new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_IN_POWER));
         driver1.getGamepadButton(DPAD_DOWN)
-                .whenPressed(new SetPowerTransferCommand(robot.transfer, TransferSubsystem.OUTTAKE_POWER));
+                .whenPressed(new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_OUT_POWER));
 
         driver1.getGamepadButton(A)
                 .whenPressed(new ParallelCommandGroup(
