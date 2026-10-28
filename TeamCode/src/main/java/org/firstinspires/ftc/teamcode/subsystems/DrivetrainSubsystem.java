@@ -13,7 +13,7 @@ import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
 public class DrivetrainSubsystem implements Subsystem {
-    private final Follower follower;
+    public final Follower follower;
 
     private final MultipleTelemetry multipleTelemetry;
 
@@ -21,6 +21,7 @@ public class DrivetrainSubsystem implements Subsystem {
         this.multipleTelemetry = multipleTelemetry;
 
         follower = createFollower(hm);
+        follower.localizer.setPose(new Pose(0,0,0));
     }
 
     public void drive(double forward, double strafe, double turn) {
@@ -66,8 +67,16 @@ public class DrivetrainSubsystem implements Subsystem {
         follower.stop();
     }
 
+    public void sendTelemetry() {
+        multipleTelemetry.addData("Pose", follower.localizer.pose());
+        multipleTelemetry.addData("Velocity", follower.localizer.velocity());
+        multipleTelemetry.addData("Drive state", follower.localizer.state());
+    }
+
     @Override
     public void periodic() {
         follower.update();
+
+        sendTelemetry();
     }
 }

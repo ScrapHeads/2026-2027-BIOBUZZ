@@ -7,12 +7,13 @@ import org.firstinspires.ftc.teamcode.util.PIDFValues;
 
 @Config
 public class FlywheelConfig {
-    public static double targetRPM = 0;
-    public static double targetPower = 0;
+    public static double targetRPM = 0.0;
+    public static double targetPower = 0.0;
     public static boolean enablePID = false;
+    public static boolean setByDistance = false;
 
     public static PIDFValues pidfValues = new PIDFValues(
-            0.0, 0.0, 0.0, 0.0
+            0.023, 0.0, 0.0, .00035
     );
 
     public static boolean REFRESH_TABLE = false;

@@ -7,8 +7,8 @@ import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 public class TransferSubsystem implements Subsystem {
     private final MotorEx transfer;
 
-    public static final double INTAKE_POWER = 1;
-    public static final double OUTTAKE_POWER = -1;
+    public static final double TRANSFER_IN_POWER = 1;
+    public static final double TRANSFER_OUT_POWER = -1;
 
     public TransferSubsystem(HardwareMap hm) {
         transfer = new MotorEx (hm, "transfer");

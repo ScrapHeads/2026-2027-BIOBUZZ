@@ -22,6 +22,8 @@ public class Robot {
 
     public final DrivetrainSubsystem drivetrain;
 
+    public final FlyWheelSubsystem flyWheel;
+
     public final TransferSubsystem transfer;
     public final IntakeSubsystem intake;
     public final VisionSubsystem vision;
@@ -35,6 +37,8 @@ public class Robot {
 
         drivetrain = new DrivetrainSubsystem(hm, multipleTelemetry);
         drivetrain.register();
+
+        flyWheel = new FlyWheelSubsystem(hm, multipleTelemetry);
 
         intake = new IntakeSubsystem(hm, multipleTelemetry);
         intake.register();
