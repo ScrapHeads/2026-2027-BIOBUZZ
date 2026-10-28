@@ -14,8 +14,10 @@ import static com.seattlesolvers.solverslib.gamepad.GamepadKeys.Button.*;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.commands.drive.DriveContinuous;
+import org.firstinspires.ftc.teamcode.commands.flywheel.SetRPMFlywheelCommand;
 import org.firstinspires.ftc.teamcode.commands.intake.SetPowerIntakeCommand;
 import org.firstinspires.ftc.teamcode.commands.turretstopper.SetPosTurretStopperCommand;
+import org.firstinspires.ftc.teamcode.subsystems.FlyWheelSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.commands.transfer.SetPowerTransferCommand;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
@@ -59,6 +61,8 @@ public class MainTeleOp extends CommandOpMode {
                 robot.drivetrain, driver1, robot.multipleTelemetry, 1
         ));
 
+        new SetRPMFlywheelCommand(robot.flyWheel,600);
+
         new Trigger(() -> driver1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > .1)
                 .whenActive(new ParallelCommandGroup(
                         new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_POWER),
@@ -93,7 +97,11 @@ public class MainTeleOp extends CommandOpMode {
                                 new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_IN_POWER),
                                 new SetPosTurretStopperCommand(robot.turretStopper, TurretStopperSubsystem.OPEN_POS)
                         ))
-                        .whenReleased(new SetPosTurretStopperCommand(robot.turretStopper, TurretStopperSubsystem.CLOSED_POS));
+                        .whenReleased(new ParallelCommandGroup(
+                                new SetPosTurretStopperCommand(robot.turretStopper, TurretStopperSubsystem.CLOSED_POS),
+                                new SetPowerIntakeCommand(robot.intake,0),
+                                new SetPowerTransferCommand(robot.transfer,0))
+                        );
 
 //        driver1.getGamepadButton(X)
 //                .whenPressed(new InstantCommand(() -> robot.vision.setPipeline(VisionConstants.GAME_ELEMENT_TRACKER_PIPELINE)));
@@ -104,5 +112,7 @@ public class MainTeleOp extends CommandOpMode {
                 .whenPressed(new SetPosTurretStopperCommand(robot.turretStopper, TurretStopperSubsystem.OPEN_POS));
         driver1.getGamepadButton(B)
                 .whenPressed(new SetPosTurretStopperCommand(robot.turretStopper, TurretStopperSubsystem.CLOSED_POS));
+
+
     }
 }
