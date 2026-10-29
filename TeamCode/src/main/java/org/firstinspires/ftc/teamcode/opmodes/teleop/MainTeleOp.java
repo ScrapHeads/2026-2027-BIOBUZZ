@@ -112,10 +112,7 @@ public class MainTeleOp extends CommandOpMode {
                 .whenPressed(new SetPosTurretStopperCommand(robot.turretStopper, TurretStopperSubsystem.OPEN_POS));
         driver1.getGamepadButton(B)
                 .whenPressed(new SetPosTurretStopperCommand(robot.turretStopper, TurretStopperSubsystem.CLOSED_POS));
-
-        driver1.getGamepadButton(LEFT_BUMPER)
-                .whenPressed(new SetRPMFlywheelCommand(robot.flyWheel,600));
-        //might just be a temporary fix or maybe not a fix didn't get a chance to test it
+        
 
     }
 }
