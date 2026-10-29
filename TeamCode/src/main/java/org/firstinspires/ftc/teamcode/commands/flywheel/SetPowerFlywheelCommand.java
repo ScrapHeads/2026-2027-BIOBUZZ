@@ -16,8 +16,9 @@ public class SetPowerFlywheelCommand extends CommandBase {
         addRequirements(flyWheel);
     }
     @Override
-    public void initialize() {
+    public void initialize(){
         flyWheel.setPower(power);
+        flyWheel.setEnablePID(false);
     }
 
     @Override
