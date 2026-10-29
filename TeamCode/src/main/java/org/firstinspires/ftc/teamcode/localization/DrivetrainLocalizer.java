@@ -32,8 +32,14 @@ public class DrivetrainLocalizer implements Localizer {
 
     @Override
     public void setPose(Pose setPose) {
+        pedroPose = setPose;
+
         pinpoint.setPose(setPose);
-        RobotState.getInstance().addOdometryObservation(ConversionUtil.toRil(setPose), TimeTracker.getTime());
+
+        RobotState.getInstance().addOdometryObservation(
+                ConversionUtil.toRil(setPose),
+                TimeTracker.getTime()
+        );
     }
 
     @Override
@@ -68,7 +74,7 @@ public class DrivetrainLocalizer implements Localizer {
 
     @Override
     public MotionState state() {
-        return null;
+        return pinpoint.state().withPose(pedroPose);
     }
 
     @Override

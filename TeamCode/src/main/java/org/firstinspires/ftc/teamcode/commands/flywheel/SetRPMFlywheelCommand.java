@@ -19,6 +19,7 @@ public class SetRPMFlywheelCommand extends CommandBase {
     @Override
     public void initialize() {
         flyWheel.setTargetRPM(rpm);
+        flyWheel.setEnablePID(true);
     }
 
 
