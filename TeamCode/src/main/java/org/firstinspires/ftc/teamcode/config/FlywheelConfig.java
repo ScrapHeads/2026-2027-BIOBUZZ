@@ -13,7 +13,7 @@ public class FlywheelConfig {
     public static boolean setByDistance = false;
 
     public static PIDFValues pidfValues = new PIDFValues(
-            0.023, 0.0, 0.0, .00035
+            0.023, 0.0, 0.0, 0.00025
     );
 
     public static boolean REFRESH_TABLE = false;

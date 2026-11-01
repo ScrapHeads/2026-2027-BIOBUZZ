@@ -35,8 +35,6 @@ public class FlyWheelSubsystem extends SubsystemBase {
 
         flywheelInterpolator = new FlywheelInterpolation();
 
-        targetPower = 0.0;
-
         this.telemetry = telemetry;
 
         flywheel.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
@@ -50,6 +48,9 @@ public class FlyWheelSubsystem extends SubsystemBase {
         );
 
         pidfValues.setLasts();
+
+        targetRPM = 595;
+        enablePID = true;
     }
 
     public void setPower(double power) {

@@ -61,8 +61,6 @@ public class MainTeleOp extends CommandOpMode {
                 robot.drivetrain, driver1, robot.multipleTelemetry, 1
         ));
 
-        new SetRPMFlywheelCommand(robot.flyWheel,600);
-
         new Trigger(() -> driver1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > .1)
                 .whenActive(new ParallelCommandGroup(
                         new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_POWER),
