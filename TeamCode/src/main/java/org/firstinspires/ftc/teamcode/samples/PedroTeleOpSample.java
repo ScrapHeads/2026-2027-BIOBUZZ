@@ -3,12 +3,14 @@ package org.firstinspires.ftc.teamcode.samples;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.ManualDrive;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.util.TelemetryData;
 
 import org.firstinspires.ftc.teamcode.config.pedro.Constants;
 
+@Disabled
 @TeleOp
 public class PedroTeleOpSample extends CommandOpMode {
     Follower follower;

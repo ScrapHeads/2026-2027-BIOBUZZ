@@ -16,7 +16,7 @@ public class SetPosTurretStopperCommand extends CommandBase {
         this.turretStopper = turretStopper;
         this.pos = pos;
 
-        addRequirements((Subsystem) turretStopper);
+        addRequirements(turretStopper);
     }
     @Override
     public void initialize(){turretStopper.setPos(pos);}

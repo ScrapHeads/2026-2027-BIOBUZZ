@@ -9,16 +9,14 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.seattlesolvers.solverslib.command.Subsystem;
+import com.seattlesolvers.solverslib.command.SubsystemBase;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Pose2d;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Rotation2d;
-import org.firstinspires.ftc.teamcode.RilLib.Math.MathUtil;
 import org.firstinspires.ftc.teamcode.RilLib.Math.VecBuilder;
 import org.firstinspires.ftc.teamcode.RobotState;
-import org.firstinspires.ftc.teamcode.util.ConversionUtil;
 import org.firstinspires.ftc.teamcode.vision.CameraPose;
 import org.firstinspires.ftc.teamcode.vision.tracking.LimelightOutputReader;
 import org.firstinspires.ftc.teamcode.util.TimeTracker;
@@ -27,12 +25,8 @@ import org.firstinspires.ftc.teamcode.vision.tracking.GameElementMap;
 import org.firstinspires.ftc.teamcode.vision.tracking.GameElementType;
 import org.firstinspires.ftc.teamcode.vision.tracking.LimelightPythonInput;
 import org.firstinspires.ftc.teamcode.vision.tracking.TrackedGameElement;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
-import java.lang.reflect.Field;
-
-public class VisionSubsystem implements Subsystem {
+public class VisionSubsystem extends SubsystemBase {
     // Owns the Limelight and reads getPythonOutput()
 
     private final Limelight3A limelight;

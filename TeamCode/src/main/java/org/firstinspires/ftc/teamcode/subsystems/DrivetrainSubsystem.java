@@ -9,10 +9,9 @@ import com.pedropathing.follower.ManualDrive;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
-public class DrivetrainSubsystem implements Subsystem {
+public class DrivetrainSubsystem extends SubsystemBase {
     public final Follower follower;
 
     private final MultipleTelemetry multipleTelemetry;

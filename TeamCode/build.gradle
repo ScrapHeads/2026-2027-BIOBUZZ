@@ -64,8 +64,8 @@ dependencies {
     implementation "com.acmerobotics.slothboard:dashboard:0.3.2+0.6.0"
 
     // Pedro Pathing
-    implementation 'com.pedropathing:revhub:3.0.0'
-    implementation 'com.pedropathing:tuning:1.0.0' // AutoTune (see Tuning.java)
+    implementation 'com.pedropathing:revhub:3.0.2'
+    implementation 'com.pedropathing:tuning:1.0.3' // AutoTune (see Tuning.java)
 
     // Panels Dashboard
 //    implementation "com.bylazar:fullpanels:1.0.12"

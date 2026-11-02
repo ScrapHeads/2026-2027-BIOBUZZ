@@ -4,10 +4,11 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Subsystem;
+import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
 @Config
-public class IntakeSubsystem implements Subsystem {
+public class IntakeSubsystem extends SubsystemBase {
 
     private final MotorEx intake;
     private final MultipleTelemetry telemetry;
@@ -17,7 +18,7 @@ public class IntakeSubsystem implements Subsystem {
     public volatile static double DASHBOARD_POWER = 0.0;
 
     public static final double INTAKE_POWER = 1;
-    public static final double OUTTAKE_POWER = -1;
+    public static final double OUTTAKE_POWER = -.5;
     public static final double STOP_POWER = 0;
 
     /** Instance of params for this launcher. */

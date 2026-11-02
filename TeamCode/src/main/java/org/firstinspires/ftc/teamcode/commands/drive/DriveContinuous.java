@@ -36,10 +36,10 @@ public class DriveContinuous extends CommandBase {
 
             if (RobotState.getInstance().isBlueTeam() != null && RobotState.getInstance().isBlueTeam()) {
                 // Blue team: field forward at -90 degrees
-                RobotState.getInstance().setHeadingOffset(Rotation2d.fromDegrees(-90));
+                RobotState.getInstance().setHeadingOffset(Rotation2d.fromDegrees(180));
             } else if (RobotState.getInstance().isBlueTeam() != null && !RobotState.getInstance().isBlueTeam()){
                 // Red team: field forward at +90 degrees
-                RobotState.getInstance().setHeadingOffset(Rotation2d.fromDegrees(90));
+                RobotState.getInstance().setHeadingOffset(Rotation2d.fromDegrees(0));
             } else {
                 RobotState.getInstance().setHeadingOffset(Rotation2d.fromDegrees(0));
             }
@@ -54,10 +54,14 @@ public class DriveContinuous extends CommandBase {
         public void execute() {
             double time = TimeTracker.getTime();
 
-            // Apply cubic control before rate limiting
-            double xInput = Math.pow(driver.getLeftY(), speedPow);
-            double yInput = Math.pow(-driver.getLeftX(), speedPow);
-            double rotInput = Math.pow(-driver.getRightX(), speedPow);
+            double leftY = driver.getLeftY();
+            double leftX = -driver.getLeftX();
+            double rightX = -driver.getRightX();
+
+            // Apply power curve control before rate limiting
+            double xInput = Math.signum(leftY) * Math.pow(Math.abs(leftY), speedPow);
+            double yInput = Math.signum(leftX) * Math.pow(Math.abs(leftX), speedPow);
+            double rotInput = Math.signum(rightX) * Math.pow(Math.abs(rightX), speedPow);
 
             // Apply slew rate limiting and speed scaling
             double xSpeed = xLimiter.calculate(xInput, time) * speed;

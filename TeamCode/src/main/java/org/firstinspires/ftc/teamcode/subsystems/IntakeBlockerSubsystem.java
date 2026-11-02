@@ -1,21 +1,33 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.seattlesolvers.solverslib.command.Subsystem;
+import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 
-public class IntakeBlockerSubsystem implements Subsystem{
+public class IntakeBlockerSubsystem extends SubsystemBase {
+    private final ServoEx leftServo;
+    private final ServoEx rightServo;
 
-
-    private final ServoEx servo1;
-    private final ServoEx servo2;
+    public static final double RIGHT_LOCK = 0;
+    public static final double RIGHT_OPEN = 1;
+    public static final double LEFT_LOCK = 1;
+    public static final double LEFT_OPEN = 0;
 
     public IntakeBlockerSubsystem(HardwareMap hardwareMap) {
-        this.servo1 = new ServoEx(hardwareMap, "IntakeBlockerServo2");
-        this.servo2 = new ServoEx(hardwareMap, "IntakeBlockerServo1");
+        this.leftServo = new ServoEx(hardwareMap, "IBL", 0, 1);
+        this.rightServo = new ServoEx(hardwareMap, "IBR", 0, 1);
+        leftServo.set(LEFT_LOCK);
+        rightServo.set(RIGHT_LOCK);
     }
-    public void setIntakeBlockerServoPositionBoth(double position){servo1.set(position);servo2.set(position);}
+    public void setIntakeBlockerServoPositionBoth(double leftPos, double rightPos){
+        leftServo.set(leftPos);
+        rightServo.set(rightPos);
+    }
 
-    public double getIntakeBlockerServoPosition2(double position){return servo2.get();}
-    public double getIntakeBlockerServoPosition1(double position){return servo1.get();}
+    public double getIntakeBlockerServoPosition2 (double position) {
+        return rightServo.get();
+    }
+    public double getIntakeBlockerServoPosition1 (double position) {
+        return leftServo.get();
+    }
 }

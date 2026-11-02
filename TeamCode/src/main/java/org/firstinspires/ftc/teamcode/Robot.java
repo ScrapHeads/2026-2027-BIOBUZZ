@@ -6,7 +6,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.DrivetrainSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.FlowerRampSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.FlyWheelSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.IntakeBlockerSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TurretStopperSubsystem;
@@ -26,7 +28,10 @@ public class Robot {
 
     public final TransferSubsystem transfer;
     public final IntakeSubsystem intake;
-    public final VisionSubsystem vision;
+
+//    public final VisionSubsystem vision;
+    public final FlowerRampSubsystem ramp;
+    public final IntakeBlockerSubsystem intakeBlocker;
     public final TurretStopperSubsystem turretStopper;
 
     public Robot (HardwareMap hm, Telemetry telemetry) {
@@ -36,20 +41,20 @@ public class Robot {
         multipleTelemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
         drivetrain = new DrivetrainSubsystem(hm, multipleTelemetry);
-        drivetrain.register();
 
         flyWheel = new FlyWheelSubsystem(hm, multipleTelemetry);
 
         intake = new IntakeSubsystem(hm, multipleTelemetry);
-        intake.register();
 
         transfer = new TransferSubsystem(hm);
-        transfer.register();
 
-        vision = new VisionSubsystem(hm, multipleTelemetry, dashboard);
-        vision.register();
+//        vision = new VisionSubsystem(hm, multipleTelemetry, dashboard);
 
         turretStopper = new TurretStopperSubsystem(hm);
+
+        ramp = new FlowerRampSubsystem(hm);
+
+        intakeBlocker = new IntakeBlockerSubsystem(hm);
 
         state = new StateIO(multipleTelemetry, dashboard);
     }
