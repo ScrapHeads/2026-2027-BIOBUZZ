@@ -49,7 +49,7 @@ public class FlyWheelSubsystem extends SubsystemBase {
 
         pidfValues.setLasts();
 
-        targetRPM = 595;
+        targetRPM = 585;
         enablePID = true;
     }
 

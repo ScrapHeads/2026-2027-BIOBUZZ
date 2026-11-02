@@ -34,7 +34,7 @@ public class TeleOpControls {
                         new SetPowerTransferCommand(robot.transfer, 0)));
 
         driver1.getGamepadButton(RIGHT_BUMPER)
-                .whenPressed(new SetPowerIntakeCommand(robot.intake, .5))
+                .whenPressed(new SetPowerIntakeCommand(robot.intake, -.5))
                 .whenReleased(new SetPowerIntakeCommand(robot.intake, 0));
 
         new Trigger(() -> driver1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > .1)
@@ -50,7 +50,10 @@ public class TeleOpControls {
                 .whenPressed(new ParallelCommandGroup(
                         new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_POWER),
                         new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_OUT_POWER_SLOW)
-                ));
+                ))
+                .whenReleased(new ParallelCommandGroup(
+                        new SetPowerIntakeCommand(robot.intake, 0),
+                        new SetPowerTransferCommand(robot.transfer, 0)));
 
         driver1.getGamepadButton(DPAD_UP)
                 .whenPressed(new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_IN_POWER));
@@ -69,8 +72,8 @@ public class TeleOpControls {
                         new SetPowerTransferCommand(robot.transfer, 0))
                 );
 
-//        driver1.getGamepadButton(Y)
-//                .whenPressed(new ToggleFlowerRampCommand(robot.ramp));
+        driver1.getGamepadButton(Y)
+                .whenPressed(new ToggleFlowerRampCommand(robot.ramp));
 //
 //        driver1.getGamepadButton(X)
 //                .whenPressed(new InstantCommand(() -> robot.vision.setPipeline(VisionConstants.GAME_ELEMENT_TRACKER_PIPELINE)));

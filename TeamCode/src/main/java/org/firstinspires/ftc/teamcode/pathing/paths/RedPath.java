@@ -80,7 +80,7 @@ public final class RedPath {
     // plannerSegment={"name":"PickUpLeftFlower","color":"#666666","method":"pickUpLeftFlower"}
     private final PoseFactory pickUpLeftFlowerPoses = PoseFactory.degrees();
     public final Pose pickUpLeftFlowerPoint1 = pickUpLeftFlowerPoses.of(34.082526499, 51.706442552, 180.000000000); // role=anchor anchor=0 locked=false
-    public final Pose pickUpLeftFlowerPoint2 = pickUpLeftFlowerPoses.of(14.347166797, 51.889177364, 180.000000000); // role=anchor anchor=1 locked=false
+    public final Pose pickUpLeftFlowerPoint2 = pickUpLeftFlowerPoses.of(14.347166797, 51.889177364, 185.000000000); // role=anchor anchor=1 locked=false
     
     public Path pickUpLeftFlower() {
         return Paths.line(pickUpLeftFlowerPoint1, pickUpLeftFlowerPoint2).constant(pickUpLeftFlowerPoint2);
@@ -89,7 +89,7 @@ public final class RedPath {
     
     // plannerSegment={"name":"LaunchLeftFlower","color":"#666666","method":"launchLeftFlower"}
     private final PoseFactory launchLeftFlowerPoses = PoseFactory.degrees();
-    public final Pose launchLeftFlowerPoint1 = launchLeftFlowerPoses.of(14.347166797, 51.889177364, 180.000000000); // role=anchor anchor=0 locked=false
+    public final Pose launchLeftFlowerPoint1 = launchLeftFlowerPoses.of(14.347166797, 51.889177364, 185.000000000); // role=anchor anchor=0 locked=false
     public final Pose launchLeftFlowerPoint2 = launchLeftFlowerPoses.of(34.996200559, 86.060587218, 270.000000000); // role=anchor anchor=1 locked=false
     private final Pose launchLeftFlowerControl2_1 = launchLeftFlowerPoses.of(34.996200559, 76.741111803, 0.000000000); // role=control anchor=1 control=0 locked=false
     public final Pose launchLeftFlowerPoint3 = launchLeftFlowerPoses.of(60.396339435, 130.830616171, 270.000000000); // role=anchor anchor=2 locked=false
