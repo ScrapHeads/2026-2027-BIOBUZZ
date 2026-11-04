@@ -8,6 +8,7 @@ public class TransferSubsystem extends SubsystemBase {
     private final MotorEx transfer;
 
     public static final double TRANSFER_IN_POWER = 1;
+    public static final double TRANSFER_IN_MID = .8;
     public static final double TRANSFER_OUT_POWER = -.5;
     public static final double TRANSFER_OUT_POWER_SLOW = -.5;
 
