@@ -12,9 +12,12 @@ import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.commands.drive.DriveContinuous;
 import org.firstinspires.ftc.teamcode.commands.flowerRamp.ToggleFlowerRampCommand;
 import org.firstinspires.ftc.teamcode.commands.intake.SetPowerIntakeCommand;
+import org.firstinspires.ftc.teamcode.commands.intakeBlocker.ToggelBlockerCommand;
+import org.firstinspires.ftc.teamcode.commands.intakeBlocker.setIntakeBlockerPosBothCommand;
 import org.firstinspires.ftc.teamcode.commands.transfer.SetPowerTransferCommand;
 import org.firstinspires.ftc.teamcode.commands.turretstopper.SetPosTurretStopperCommand;
 import org.firstinspires.ftc.teamcode.config.VisionConstants;
+import org.firstinspires.ftc.teamcode.subsystems.IntakeBlockerSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TurretStopperSubsystem;
@@ -74,6 +77,8 @@ public class TeleOpControls {
 
         driver1.getGamepadButton(Y)
                 .whenPressed(new ToggleFlowerRampCommand(robot.ramp));
+        driver1.getGamepadButton(B)
+                .whenPressed(new ToggelBlockerCommand(robot.intakeBlocker));
 
 //        driver1.getGamepadButton(X)
 //                .whenPressed(new InstantCommand(() -> robot.vision.setPipeline(VisionConstants.GAME_ELEMENT_TRACKER_PIPELINE)));
