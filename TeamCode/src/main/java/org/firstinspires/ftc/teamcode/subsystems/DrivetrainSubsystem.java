@@ -20,7 +20,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
         this.multipleTelemetry = multipleTelemetry;
 
         follower = createFollower(hm);
-//        follower.localizer.setPose(new Pose(0,0,0));
+        follower.localizer.reset();
+        follower.setPose(new Pose(0, 0, 0));
     }
 
     public void drive(double forward, double strafe, double turn) {

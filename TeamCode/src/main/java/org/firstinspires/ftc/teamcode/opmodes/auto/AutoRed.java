@@ -69,7 +69,7 @@ public class AutoRed extends BaseAuto {
                         new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_POWER),
                         new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_IN_POWER)
                 ),
-//
+
                 new WaitCommand(500),
 
                 new ParallelCommandGroup(
@@ -79,9 +79,9 @@ public class AutoRed extends BaseAuto {
                 ),
 
                 launchSequence(),
-//
+
                 new FollowPathCommand(follower, pathSet.prePickUpLeftFlower()),
-//
+
                 new ParallelCommandGroup(
                         new FollowPathCommand(follower, pathSet.pickUpLeftFlower(), .4).withTimeout(1500),
                         new setFlowerRampPosCommand(robot.ramp, FlowerRampSubsystem.DOWN_POS),
@@ -114,7 +114,7 @@ public class AutoRed extends BaseAuto {
                         new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_POWER),
                         new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_IN_POWER)
                 ),
-//
+
                 new WaitCommand(1150),
 
                 new ParallelCommandGroup(
@@ -125,9 +125,9 @@ public class AutoRed extends BaseAuto {
                                 new SetPowerTransferCommand(robot.transfer, 0)
                         )
                 ),
-//
+
                 launchSequence(),
-//
+
                 new FollowPathCommand(follower, pathSet.park())
 
         ).schedule();

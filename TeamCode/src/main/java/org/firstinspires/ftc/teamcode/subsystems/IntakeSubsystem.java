@@ -17,7 +17,8 @@ public class IntakeSubsystem extends SubsystemBase {
     public volatile static boolean DASHBOARD_CONTROL = false;
     public volatile static double DASHBOARD_POWER = 0.0;
 
-    public static final double INTAKE_POWER = 1;
+    public static final double INTAKE_POWER = .95;
+    public static final double INTAKE_MID_POWER = .8;
     public static final double OUTTAKE_POWER = -.5;
     public static final double STOP_POWER = 0;
 
