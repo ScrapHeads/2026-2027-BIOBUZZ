@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
 import static com.seattlesolvers.solverslib.gamepad.GamepadKeys.Button.*;
 
-import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.button.Trigger;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
@@ -13,11 +12,8 @@ import org.firstinspires.ftc.teamcode.commands.drive.DriveContinuous;
 import org.firstinspires.ftc.teamcode.commands.flowerRamp.ToggleFlowerRampCommand;
 import org.firstinspires.ftc.teamcode.commands.intake.SetPowerIntakeCommand;
 import org.firstinspires.ftc.teamcode.commands.intakeBlocker.ToggelBlockerCommand;
-import org.firstinspires.ftc.teamcode.commands.intakeBlocker.setIntakeBlockerPosBothCommand;
 import org.firstinspires.ftc.teamcode.commands.transfer.SetPowerTransferCommand;
 import org.firstinspires.ftc.teamcode.commands.turretstopper.SetPosTurretStopperCommand;
-import org.firstinspires.ftc.teamcode.config.VisionConstants;
-import org.firstinspires.ftc.teamcode.subsystems.IntakeBlockerSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TurretStopperSubsystem;
@@ -65,8 +61,8 @@ public class TeleOpControls {
 
         driver1.getGamepadButton(A)
                 .whenPressed(new ParallelCommandGroup(
-                        new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_MID_POWER),
-                        new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_IN_MID),
+                        new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_LAUNCH_POWER),
+                        new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_LAUNCH_POWER),
                         new SetPosTurretStopperCommand(robot.turretStopper, TurretStopperSubsystem.OPEN_POS)
                 ))
                 .whenReleased(new ParallelCommandGroup(

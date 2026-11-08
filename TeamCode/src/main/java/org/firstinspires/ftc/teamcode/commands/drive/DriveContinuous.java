@@ -36,10 +36,10 @@ public class DriveContinuous extends CommandBase {
 
             if (RobotState.getInstance().isBlueTeam() != null && RobotState.getInstance().isBlueTeam()) {
                 // Blue team: field forward at -90 degrees
-                RobotState.getInstance().setHeadingOffset(Rotation2d.fromDegrees(180));
+                RobotState.getInstance().setHeadingOffset(Rotation2d.fromDegrees(90));
             } else if (RobotState.getInstance().isBlueTeam() != null && !RobotState.getInstance().isBlueTeam()){
                 // Red team: field forward at +90 degrees
-                RobotState.getInstance().setHeadingOffset(Rotation2d.fromDegrees(0));
+                RobotState.getInstance().setHeadingOffset(Rotation2d.fromDegrees(90));
             } else {
                 RobotState.getInstance().setHeadingOffset(Rotation2d.fromDegrees(0));
             }

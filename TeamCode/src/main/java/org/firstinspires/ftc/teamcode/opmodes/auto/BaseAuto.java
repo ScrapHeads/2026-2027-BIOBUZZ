@@ -60,8 +60,8 @@ public abstract class BaseAuto extends CommandOpMode {
     public SequentialCommandGroup launchSequence() {
         return new SequentialCommandGroup(
                 new ParallelCommandGroup(
-                        new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_MID_POWER),
-                        new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_IN_MID),
+                        new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_LAUNCH_POWER),
+                        new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_LAUNCH_POWER),
                         new SetPosTurretStopperCommand(robot.turretStopper, TurretStopperSubsystem.OPEN_POS)
                 ),
                 new WaitCommand(1500),

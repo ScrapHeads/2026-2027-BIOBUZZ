@@ -11,8 +11,8 @@ public class FlowerRampSubsystem extends SubsystemBase {
     public static final double MIN_ANGLE_SERVO = 500;
     public static  final double MAX_ANGLE_SERVO = 2500;
 
-    public static final double DOWN_POS = 1820;
-    public static final double UP_POS = 2500;
+    public static final double DOWN_POS = 1450;
+    public static final double UP_POS = 2190;
 
     public enum RampState {
         UP,
