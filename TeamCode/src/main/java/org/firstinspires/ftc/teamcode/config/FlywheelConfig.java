@@ -15,6 +15,7 @@ public class FlywheelConfig {
     public static PIDFValues pidfValues = new PIDFValues(
             0.023, 0.0, 0.0, 0.00025
     );
+    // kp: .032, .01, 0.0, 0.00016
 
     public static boolean REFRESH_TABLE = false;
 

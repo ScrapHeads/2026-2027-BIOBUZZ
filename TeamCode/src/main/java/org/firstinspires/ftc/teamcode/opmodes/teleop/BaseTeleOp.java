@@ -57,6 +57,11 @@ public abstract class BaseTeleOp extends CommandOpMode {
     }
 
     public void assignControls() {
-        TeleOpControls.assignControls(robot, driver1, driver2);
+        if (RobotState.getInstance().isBlueTeam()) {
+            TeleOpControls.assignControls(robot, driver1, driver2);
+        } else {
+            TeleOpControls.assignControls(robot, driver2, driver1);
+        }
+
     }
 }

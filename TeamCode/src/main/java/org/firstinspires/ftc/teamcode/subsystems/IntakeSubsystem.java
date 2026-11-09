@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
@@ -18,7 +17,7 @@ public class IntakeSubsystem extends SubsystemBase {
     public volatile static double DASHBOARD_POWER = 0.0;
 
     public static final double INTAKE_POWER = .95;
-    public static final double INTAKE_MID_POWER = .8;
+    public static final double INTAKE_LAUNCH_POWER = .9;
     public static final double OUTTAKE_POWER = -.5;
     public static final double STOP_POWER = 0;
 
