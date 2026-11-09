@@ -10,12 +10,17 @@ import org.firstinspires.ftc.teamcode.RilLib.Math.Numbers.N3;
 import org.firstinspires.ftc.teamcode.RilLib.Math.VecBuilder;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Vector;
 import org.firstinspires.ftc.teamcode.RobotState;
-import org.firstinspires.ftc.teamcode.util.TimeTracker;
+import org.firstinspires.ftc.teamcode.util.LocalizationClock;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 
 public class RobotStateTest {
+    @BeforeEach
+    void resetLocalization() {
+        RobotState.getInstance().resetPose(new Pose2d(), LocalizationClock.now());
+    }
 
     public Vector<N3> createDummyVector() {
         double fakeLimelightInputX = .5;
@@ -49,16 +54,16 @@ public class RobotStateTest {
     @DisplayName("addVisionObservationTest")
     public void addVisionObservationTest() {
         RobotState robotState = RobotState.getInstance();
-        TimeTracker.setOffset();
+        // Localization uses one monotonic clock.
 
         // 1. Must add an initial odometry observation first to initialize poseEstimator and its buffer
         Pose2d initialOdoPose = new Pose2d(0, 0, new Rotation2d(0));
-        robotState.addOdometryObservation(initialOdoPose, TimeTracker.getTime());
+        robotState.addOdometryObservation(initialOdoPose, LocalizationClock.now());
 
         // 2. Add vision observation to correct the pose estimate
         Pose2d visionPose2d = new Pose2d(1, 1, new Rotation2d(Math.toRadians(30)));
         Vector<N3> dummyVector = createDummyVector();
-        robotState.addVisionObservation(visionPose2d, TimeTracker.getTime(), dummyVector);
+        robotState.addVisionObservation(visionPose2d, LocalizationClock.now(), dummyVector);
 
         assertNotNull(robotState.getEstimatedPose(), "Estimated pose should not be null after vision observation");
         System.out.println("Fused Estimated Pose: " + robotState.getEstimatedPose());
@@ -70,8 +75,8 @@ public class RobotStateTest {
     public void addOdometryObservationTest() {
         RobotState robotState = RobotState.getInstance();
         Pose2d odoPose2d = new Pose2d(1, 1, new Rotation2d(180));
-        TimeTracker.setOffset();
-        robotState.addOdometryObservation(odoPose2d, TimeTracker.getTime());
+        // Localization uses one monotonic clock.
+        robotState.addOdometryObservation(odoPose2d, LocalizationClock.now());
         assertEquals(odoPose2d, robotState.getOdometryPose());
     }
 

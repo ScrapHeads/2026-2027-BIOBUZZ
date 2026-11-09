@@ -37,6 +37,9 @@ public abstract class BaseTeleOp extends CommandOpMode {
 
         robot = new Robot(hardwareMap, telemetry);
         robot.state.load();
+        robot.drivetrain.follower.setPose(
+                org.firstinspires.ftc.teamcode.util.ConversionUtil.toPedro(
+                        RobotState.getInstance().getEstimatedPose()));
 
         Boolean team = getAllianceTeam();
         if (team != null) {
@@ -49,6 +52,12 @@ public abstract class BaseTeleOp extends CommandOpMode {
     }
 
     @Override
+    public void reset() {
+        if (robot != null) robot.close();
+        super.reset();
+    }
+
+    @Override
     public void run() {
         super.run(); // VERY IMPORTANT: runs the CommandScheduler on every loop cycle
 
@@ -57,7 +66,7 @@ public abstract class BaseTeleOp extends CommandOpMode {
     }
 
     public void assignControls() {
-        if (RobotState.getInstance().isBlueTeam()) {
+        if (Boolean.TRUE.equals(RobotState.getInstance().isBlueTeam())) {
             TeleOpControls.assignControls(robot, driver1, driver2);
         } else {
             TeleOpControls.assignControls(robot, driver2, driver1);

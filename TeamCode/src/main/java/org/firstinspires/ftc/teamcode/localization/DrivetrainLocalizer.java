@@ -1,105 +1,78 @@
 package org.firstinspires.ftc.teamcode.localization;
 
-
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Twist;
-import com.pedropathing.math.Vector;
 import com.pedropathing.math.Velocity;
 import com.pedropathing.revhub.localizers.PinpointConfig;
 import com.pedropathing.revhub.localizers.PinpointLocalizer;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-
+import org.firstinspires.ftc.teamcode.RilLib.Math.ChassisSpeeds;
 import org.firstinspires.ftc.teamcode.RobotState;
 import org.firstinspires.ftc.teamcode.util.ConversionUtil;
-import org.firstinspires.ftc.teamcode.util.TimeTracker;
+import org.firstinspires.ftc.teamcode.util.LocalizationClock;
 
-import java.util.Map;
+import java.util.function.DoubleConsumer;
 
-/**
- * Custom Localizer that integrates GoBilda Pinpoint and Limelight Vision via RobotState.
- * This class acts as the bridge between the hardware and Pedro Pathing.
- */
+/** One raw odometry update, then cached vision correction, then one fused Pedro state. */
 public class DrivetrainLocalizer implements Localizer {
-
     private final PinpointLocalizer pinpoint;
-    private Pose pedroPose = new Pose(0, 0, 0);
+    private final RobotState robotState = RobotState.getInstance();
+    private Pose pedroPose;
+    private long poseGeneration;
+    private DoubleConsumer visionUpdate = time -> {};
 
-    public DrivetrainLocalizer (HardwareMap hardwareMap, PinpointConfig pinpointConstants) {
-        pinpoint = new PinpointLocalizer(hardwareMap, pinpointConstants);
+    public DrivetrainLocalizer(HardwareMap hardwareMap, PinpointConfig config) {
+        pinpoint = new PinpointLocalizer(hardwareMap, config);
+        setPose(pinpoint.pose());
     }
 
-    @Override
-    public void setPose(Pose setPose) {
-        pedroPose = setPose;
-
-        pinpoint.setPose(setPose);
-
-        RobotState.getInstance().addOdometryObservation(
-                ConversionUtil.toRil(setPose),
-                TimeTracker.getTime()
-        );
+    public void setVisionUpdate(DoubleConsumer update) {
+        visionUpdate = update == null ? time -> {} : update;
     }
 
-    @Override
-    public void setX(double x) {
-        pinpoint.setX(x);
+    @Override public void setPose(Pose pose) {
+        pinpoint.setPose(pose);
+        robotState.resetPose(ConversionUtil.toRil(pose), LocalizationClock.now());
+        poseGeneration = robotState.getPoseGeneration();
+        pedroPose = pose;
     }
+    @Override public void setX(double x) { setPose(new Pose(x, pedroPose.y(), pedroPose.heading())); }
+    @Override public void setY(double y) { setPose(new Pose(pedroPose.x(), y, pedroPose.heading())); }
+    @Override public void setHeading(double heading) { setPose(new Pose(pedroPose.x(), pedroPose.y(), heading)); }
+    @Override public Pose pose() { return pedroPose; }
 
-    @Override
-    public void setY(double y) {
-        pinpoint.setY(y);
+    @Override public Velocity velocity() {
+        // Rotate the raw field velocity by the fused heading correction. Do not
+        // differentiate pose jumps from vision to manufacture robot motion.
+        Velocity raw = pinpoint.velocity();
+        double offset = pedroPose.heading() - pinpoint.pose().heading();
+        double c = Math.cos(offset), s = Math.sin(offset);
+        return new Velocity(c * raw.vx - s * raw.vy, s * raw.vx + c * raw.vy, raw.omega);
     }
+    @Override public Twist twist() { return state().twist(); }
+    @Override public MotionState state() { return MotionState.ofVelocity(pedroPose, velocity()); }
 
-    @Override
-    public void setHeading(double heading) {
-        pinpoint.setHeading(heading);
-    }
-
-    @Override
-    public Pose pose() {
-        return pedroPose;
-    }
-
-    @Override
-    public Twist twist() {
-        return pinpoint.twist();
-    }
-
-    @Override
-    public Velocity velocity() {
-        return pinpoint.velocity();
-    }
-
-    @Override
-    public MotionState state() {
-        return pinpoint.state().withPose(pedroPose);
-    }
-
-    @Override
-    public void update() {
-        // 1. Update the Pinpoint hardware
+    @Override public void update() {
+        // External reset/handoff changes both hardware origin and fusion history.
+        if (poseGeneration != robotState.getPoseGeneration()) {
+            pedroPose = ConversionUtil.toPedro(robotState.getEstimatedPose());
+            pinpoint.setPose(pedroPose);
+            poseGeneration = robotState.getPoseGeneration();
+        }
         pinpoint.update();
-
-        // 2. Push the raw Pinpoint pose (Odometry) to the centralized PoseEstimator in RobotState
-        // We use TimeTracker to ensure timestamps are consistent with vision data
-        RobotState.getInstance().addOdometryObservation(
-                ConversionUtil.toRil(pinpoint.pose()),
-                TimeTracker.getTime()
-        );
-
-        // 3. Fetch the fused estimate (Odometry + Vision) back from RobotState for Pedro Pathing
-        pedroPose = ConversionUtil.toPedro(RobotState.getInstance().getEstimatedPose());
+        double now = LocalizationClock.now();
+        robotState.addOdometryObservation(ConversionUtil.toRil(pinpoint.pose()), now);
+        visionUpdate.accept(now);
+        pedroPose = ConversionUtil.toPedro(robotState.getEstimatedPose());
+        Velocity v = velocity();
+        robotState.setChassisSpeeds(new ChassisSpeeds(v.vx * 0.0254, v.vy * 0.0254, v.omega));
     }
 
-    @Override
-    public void reset() {
-
-    }
-
-    @Override
-    public Map<String, Object> debug() {
-        return Localizer.super.debug();
+    @Override public void reset() {
+        pinpoint.reset();
+        pinpoint.update();
+        setPose(pinpoint.pose());
     }
 }

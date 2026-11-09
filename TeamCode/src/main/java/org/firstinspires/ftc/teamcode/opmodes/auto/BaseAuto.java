@@ -10,10 +10,9 @@ import com.seattlesolvers.solverslib.command.WaitCommand;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.RilLib.Math.ChassisSpeeds;
-import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Pose2d;
-import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Rotation2d;
 import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.RobotState;
+import org.firstinspires.ftc.teamcode.util.ConversionUtil;
 import org.firstinspires.ftc.teamcode.commands.intake.SetPowerIntakeCommand;
 import org.firstinspires.ftc.teamcode.commands.transfer.SetPowerTransferCommand;
 import org.firstinspires.ftc.teamcode.commands.turretstopper.SetPosTurretStopperCommand;
@@ -49,7 +48,7 @@ public abstract class BaseAuto extends CommandOpMode {
             robot.drivetrain.follower.setPose(startPose);
             RobotState.getInstance().setTeam(isBlueTeam());
             RobotState.getInstance().setAll(
-                    new Pose2d(startPose.x(), startPose.y(), new Rotation2d(startPose.heading())),
+                    ConversionUtil.toRil(startPose),
                     isBlueTeam(),
                     new ChassisSpeeds()
             );
@@ -74,18 +73,18 @@ public abstract class BaseAuto extends CommandOpMode {
     }
 
     @Override
+    public void reset() {
+        if (robot != null) {
+            robot.state.save(); // Save the fused meters/radians snapshot once at handoff.
+            robot.close();
+        }
+        super.reset();
+    }
+
+    @Override
     public void run() {
         super.run();
 
-        Pose currentPose = robot.drivetrain.getPose();
-        if (currentPose != null) {
-            RobotState.getInstance().setAll(
-                    new Pose2d(currentPose.x(), currentPose.y(), new Rotation2d(currentPose.heading())),
-                    isBlueTeam(),
-                    new ChassisSpeeds()
-            );
-            robot.state.save();
-        }
 
         robot.getTelemetry().addLine("Running");
         robot.getTelemetry().update();

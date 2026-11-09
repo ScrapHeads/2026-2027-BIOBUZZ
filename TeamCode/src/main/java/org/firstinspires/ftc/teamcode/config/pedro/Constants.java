@@ -9,7 +9,6 @@ import com.pedropathing.math.Vector2D;
 import com.pedropathing.revhub.drivetrains.Mecanum;
 import com.pedropathing.revhub.drivetrains.MecanumConfig;
 import com.pedropathing.revhub.localizers.PinpointConfig;
-import com.pedropathing.revhub.localizers.PinpointLocalizer;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -78,8 +77,7 @@ public class Constants {
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new Follower(
-//                new DrivetrainLocalizer(hardwareMap, pinpointLocalizerConfig),
-                new PinpointLocalizer(hardwareMap, pinpointLocalizerConfig),
+                new DrivetrainLocalizer(hardwareMap, pinpointLocalizerConfig),
                 new Mecanum(hardwareMap, drivetrainConfig),
                 new Foresight(foresightConfig)
         );

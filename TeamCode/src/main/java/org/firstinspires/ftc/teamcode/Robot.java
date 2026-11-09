@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.subsystems.TurretStopperSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.VisionSubsystem;
 import org.firstinspires.ftc.teamcode.util.StateIO;
 
-public class Robot {
+public class Robot implements AutoCloseable {
     public final HardwareMap hm;
     public final Telemetry telemetry;
     public static final FtcDashboard dashboard = FtcDashboard.getInstance();
@@ -29,7 +29,7 @@ public class Robot {
     public final TransferSubsystem transfer;
     public final IntakeSubsystem intake;
 
-//    public final VisionSubsystem vision;
+    public final VisionSubsystem vision;
     public final FlowerRampSubsystem ramp;
     public final IntakeBlockerSubsystem intakeBlocker;
     public final TurretStopperSubsystem turretStopper;
@@ -48,7 +48,9 @@ public class Robot {
 
         transfer = new TransferSubsystem(hm);
 
-//        vision = new VisionSubsystem(hm, multipleTelemetry, dashboard);
+        vision = new VisionSubsystem(hm, multipleTelemetry, dashboard);
+        ((org.firstinspires.ftc.teamcode.localization.DrivetrainLocalizer)
+                drivetrain.follower.localizer).setVisionUpdate(vision::updateLocalization);
 
         turretStopper = new TurretStopperSubsystem(hm);
 
@@ -57,6 +59,11 @@ public class Robot {
         intakeBlocker = new IntakeBlockerSubsystem(hm);
 
         state = new StateIO(multipleTelemetry, dashboard);
+    }
+
+    @Override public void close() {
+        vision.close();
+        drivetrain.stop();
     }
 
     public MultipleTelemetry getTelemetry () {

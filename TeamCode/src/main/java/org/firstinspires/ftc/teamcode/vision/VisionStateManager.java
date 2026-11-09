@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.vision;
 
-import static org.firstinspires.ftc.teamcode.config.VisionConstants.START_PIPELINE;
-
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 
 public class VisionStateManager {
@@ -20,12 +18,15 @@ public class VisionStateManager {
     public VisionStateManager(Limelight3A limelight) {
         this.limelight = limelight;
         this.region = ScanRegions.TOP_LEFT;
-        this.currentPipeline = START_PIPELINE;
+        this.currentPipeline = -1; // No confirmed request yet.
     }
 
-    public void setCurrentPipeline(int newPipeline) {
-        this.currentPipeline = newPipeline;
-        limelight.pipelineSwitch(currentPipeline);
+    public boolean setCurrentPipeline(int newPipeline) {
+        if (newPipeline < 0 || newPipeline > 9 || !limelight.pipelineSwitch(newPipeline)) {
+            return false;
+        }
+        currentPipeline = newPipeline;
+        return true;
     }
 
     public int getCurrentPipeline() {
