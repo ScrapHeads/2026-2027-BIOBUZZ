@@ -29,7 +29,7 @@ public class TeleOpControls {
                 .whenActive(new ParallelCommandGroup(
                         new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_POWER),
                         new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_IN_POWER)))
-                .whenInactive(new IntakeTransferSetPower(robot.intake, robot.transfer));
+                .whenInactive(new IntakeTransferSetPower(robot.intake, robot.transfer, IntakeSubsystem.INTAKE_POWER, TransferSubsystem.TRANSFER_IN_POWER));
 
         driver1.getGamepadButton(RIGHT_BUMPER)
                 .whenPressed(new SetPowerIntakeCommand(robot.intake, -.5))
@@ -40,16 +40,14 @@ public class TeleOpControls {
                         new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.OUTTAKE_POWER),
                         new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_OUT_POWER)
                 ))
-                .whenInactive(new IntakeTransferSetPower(robot.intake,robot.transfer));
+                .whenInactive(new IntakeTransferSetPower(robot.intake,robot.transfer,IntakeSubsystem.OUTTAKE_POWER, TransferSubsystem.TRANSFER_OUT_POWER));
 
         driver1.getGamepadButton(LEFT_BUMPER)
                 .whenPressed(new ParallelCommandGroup(
                         new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_POWER),
                         new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_OUT_POWER_SLOW)
                 ))
-                .whenReleased(new ParallelCommandGroup(
-                        new SetPowerIntakeCommand(robot.intake, 0),
-                        new SetPowerTransferCommand(robot.transfer, 0)));
+                .whenReleased(new IntakeTransferSetPower(robot.intake,robot.transfer,IntakeSubsystem.INTAKE_POWER,TransferSubsystem.TRANSFER_OUT_POWER_SLOW));
 
         driver1.getGamepadButton(DPAD_UP)
                 .whenPressed(new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_IN_POWER));

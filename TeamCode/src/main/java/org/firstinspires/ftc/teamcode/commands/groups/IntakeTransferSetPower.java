@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.commands.groups;
 
+import android.health.connect.datatypes.units.Power;
+
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 
 import org.firstinspires.ftc.teamcode.commands.intake.SetPowerIntakeCommand;
@@ -9,13 +11,10 @@ import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 
 public class IntakeTransferSetPower extends SequentialCommandGroup{
 
-    double intake=0;
-    double transfer=0;
-
-    public IntakeTransferSetPower(IntakeSubsystem intake, TransferSubsystem transfer){
+    public IntakeTransferSetPower(IntakeSubsystem intake, TransferSubsystem transfer, double intakePower, double transferPower){
         addCommands(
-                new SetPowerIntakeCommand(intake, 0),
-                new SetPowerTransferCommand(transfer, 0)
+                new SetPowerIntakeCommand(intake, transferPower),
+                new SetPowerTransferCommand(transfer, intakePower)
         );
     }
 }
