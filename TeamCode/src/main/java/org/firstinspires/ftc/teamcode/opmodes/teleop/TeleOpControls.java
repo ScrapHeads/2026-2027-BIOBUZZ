@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
 import static com.seattlesolvers.solverslib.gamepad.GamepadKeys.Button.*;
 
-import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.button.Trigger;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
@@ -11,10 +10,10 @@ import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.commands.drive.DriveContinuous;
 import org.firstinspires.ftc.teamcode.commands.flowerRamp.ToggleFlowerRampCommand;
+import org.firstinspires.ftc.teamcode.commands.groups.IntakeTransferSetPower;
 import org.firstinspires.ftc.teamcode.commands.intake.SetPowerIntakeCommand;
 import org.firstinspires.ftc.teamcode.commands.transfer.SetPowerTransferCommand;
 import org.firstinspires.ftc.teamcode.commands.turretstopper.SetPosTurretStopperCommand;
-import org.firstinspires.ftc.teamcode.config.VisionConstants;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TurretStopperSubsystem;
@@ -29,9 +28,7 @@ public class TeleOpControls {
                 .whenActive(new ParallelCommandGroup(
                         new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.INTAKE_POWER),
                         new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_IN_POWER)))
-                .whenInactive(new ParallelCommandGroup(
-                        new SetPowerIntakeCommand(robot.intake, 0),
-                        new SetPowerTransferCommand(robot.transfer, 0)));
+                .whenInactive(new IntakeTransferSetPower(robot.intake, robot.transfer));
 
         driver1.getGamepadButton(RIGHT_BUMPER)
                 .whenPressed(new SetPowerIntakeCommand(robot.intake, -.5))
@@ -42,9 +39,7 @@ public class TeleOpControls {
                         new SetPowerIntakeCommand(robot.intake, IntakeSubsystem.OUTTAKE_POWER),
                         new SetPowerTransferCommand(robot.transfer, TransferSubsystem.TRANSFER_OUT_POWER)
                 ))
-                .whenInactive(new ParallelCommandGroup(
-                        new SetPowerIntakeCommand(robot.intake, 0),
-                        new SetPowerTransferCommand(robot.transfer, 0)));
+                .whenInactive(new IntakeTransferSetPower(robot.intake,robot.transfer));
 
         driver1.getGamepadButton(LEFT_BUMPER)
                 .whenPressed(new ParallelCommandGroup(
