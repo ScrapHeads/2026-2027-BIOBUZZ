@@ -10,8 +10,10 @@ public class TurretPosConfig {
     public static double targetAngleDegrees = 0;
     public static double targetPower = 0;
 
-    public static boolean enablePID = true;
-    public static boolean solveAngle = true;
+    public static boolean enablePID = false;
+    public static boolean solveAngle = false;
+    // Show hive outlines and the solved shot on the FTC Dashboard field overlay.
+    public static boolean showAimDashboard = true;
 
     // TODO: Tune turret PIDF gains with the position error measured in degrees.
     public static PIDFValues pidfValues = new PIDFValues(

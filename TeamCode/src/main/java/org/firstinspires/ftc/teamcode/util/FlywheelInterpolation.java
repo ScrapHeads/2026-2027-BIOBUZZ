@@ -14,17 +14,24 @@ public class FlywheelInterpolation {
                             start + (end - start) * t
             );
 
+    public FlywheelInterpolation() {
+        refreshTable();
+    }
+
+    private void refreshTable() {
+        rpmMap.clear();
+        for (double[] point : FLYWHEEL_TABLE) {
+            rpmMap.put(point[0], point[1]);
+        }
+    }
+
     public double getRPM (double distanceCm) {
         Double rpm = rpmMap.get(distanceCm);
         return rpm != null ? rpm : -1;
     }
 
     public double getRPMRefresh(double distanceCm) {
-        rpmMap.clear();
-
-        for (double[] point : FLYWHEEL_TABLE) {
-            rpmMap.put(point[0], point[1]);
-        }
+        refreshTable();
 
         Double rpm = rpmMap.get(distanceCm);
         return rpm != null ? rpm : -1;

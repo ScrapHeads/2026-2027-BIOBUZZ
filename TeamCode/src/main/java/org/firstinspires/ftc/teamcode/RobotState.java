@@ -9,6 +9,7 @@ import org.firstinspires.ftc.teamcode.RilLib.Math.Numbers.N3;
 import org.firstinspires.ftc.teamcode.RilLib.Math.PoseEstimator;
 import org.firstinspires.ftc.teamcode.util.ConversionUtil;
 import org.firstinspires.ftc.teamcode.util.LocalizationClock;
+import org.firstinspires.ftc.teamcode.util.aim.AimSolution;
 import org.firstinspires.ftc.teamcode.util.aim.HiveAim;
 import org.firstinspires.ftc.teamcode.vision.CameraPose;
 
@@ -19,6 +20,14 @@ import java.util.TreeSet;
 /** Serializable robot pose snapshot. Position: meters; heading: radians. */
 public class RobotState {
     public enum Goal { NORTH, SOUTH }
+
+    // Derived data is never persisted with the autonomous/teleop state snapshot.
+    private transient boolean aimCacheValid;
+    private transient Pose2d aimPose;
+    private transient HiveAim.Cell aimCell;
+    private transient long aimPoseGeneration;
+    private transient Optional<AimSolution> aimSolution = Optional.empty();
+    private transient double previousAimAngle;
 
     private Goal currentGoal = Goal.NORTH;
     private transient PoseEstimator poseEstimator;
@@ -60,7 +69,7 @@ public class RobotState {
 
     public synchronized void setAll(Pose2d pose, Boolean blue, ChassisSpeeds speeds) {
         resetPose(pose, LocalizationClock.now());
-        isBlue = blue;
+        setTeam(blue);
         chassisSpeeds = speeds;
     }
 
@@ -71,7 +80,7 @@ public class RobotState {
         if (pose == null) pose = other.getOdometryPose();
         setAll(pose, other.isBlueTeam(), other.getChassisSpeeds());
         cameraPose = other.getCameraPose();
-        currentGoal = other.getCurrentGoal();
+        setCurrentGoal(other.getCurrentGoal());
     }
 
     public synchronized void addOdometryObservation(Pose2d pose, double time) {
@@ -121,7 +130,13 @@ public class RobotState {
                 && Double.isFinite(pose.getRotation().getRadians());
     }
     public synchronized Boolean isBlueTeam() { return isBlue; }
-    public synchronized void setTeam(Boolean blue) { isBlue = blue; }
+    public synchronized void setTeam(Boolean blue) {
+        if (!java.util.Objects.equals(isBlue, blue)) {
+            aimCacheValid = false;
+            previousAimAngle = 0.0;
+        }
+        isBlue = blue;
+    }
 
     /** Defaults to NORTH, including when restoring a snapshot without a goal field. */
     public synchronized Goal getCurrentGoal() {
@@ -130,12 +145,16 @@ public class RobotState {
 
     public synchronized void setCurrentGoal(Goal goal) {
         if (goal == null) throw new IllegalArgumentException("Goal must be NORTH or SOUTH");
+        if (getCurrentGoal() != goal) {
+            aimCacheValid = false;
+            previousAimAngle = 0.0;
+        }
         currentGoal = goal;
     }
 
     /** Call once per button press to switch between the north and south goals. */
     public synchronized void toggleGoal() {
-        currentGoal = getCurrentGoal() == Goal.NORTH ? Goal.SOUTH : Goal.NORTH;
+        setCurrentGoal(getCurrentGoal() == Goal.NORTH ? Goal.SOUTH : Goal.NORTH);
     }
 
     /** Selected goal's alliance cell, or null until the alliance has been set. */
@@ -145,6 +164,40 @@ public class RobotState {
             return isBlue ? HiveAim.Cell.BLUE_NORTH : HiveAim.Cell.RED_NORTH;
         }
         return isBlue ? HiveAim.Cell.BLUE_SOUTH : HiveAim.Cell.RED_SOUTH;
+    }
+
+    /**
+     * Calculates on demand and reuses the result until pose, goal, or alliance changes.
+     * No turret encoder or subsystem periodic update is required. Angles are radians.
+     */
+    public synchronized Optional<AimSolution> getAimSolution() {
+        HiveAim.Cell cell = getTargetCell();
+        if (aimCacheValid && aimPose == estimatedPose && aimCell == cell
+                && aimPoseGeneration == poseGeneration) {
+            return aimSolution;
+        }
+        if (aimCell != cell || aimPoseGeneration != poseGeneration) previousAimAngle = 0.0;
+        aimPose = estimatedPose;
+        aimCell = cell;
+        aimPoseGeneration = poseGeneration;
+        aimSolution = Optional.empty();
+        if (cell != null && validPose(estimatedPose)) {
+            com.pedropathing.math.Pose pose = getEstimatedPedroPose();
+            Optional<HiveAim.Solution> solved = HiveAim.solve(
+                    cell, HiveAim.Piece.POLLEN, pose, previousAimAngle,
+                    false, -Math.PI, Math.PI);
+            if (solved.isPresent()) {
+                HiveAim.Solution solution = solved.get();
+                previousAimAngle = solution.turretAngle;
+                aimSolution = Optional.of(new AimSolution(cell, solution, pose.x(), pose.y()));
+            } else {
+                previousAimAngle = 0.0;
+            }
+        } else {
+            previousAimAngle = 0.0;
+        }
+        aimCacheValid = true;
+        return aimSolution;
     }
 
     public synchronized Pose2d getOdometryPose() { return odometryPose; }

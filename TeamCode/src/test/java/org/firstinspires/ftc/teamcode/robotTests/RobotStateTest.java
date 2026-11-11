@@ -2,6 +2,9 @@ package org.firstinspires.ftc.teamcode.robotTests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.firstinspires.ftc.teamcode.RilLib.Math.ChassisSpeeds;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Pose2d;
@@ -9,6 +12,9 @@ import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Rotation2d;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Numbers.N3;
 import org.firstinspires.ftc.teamcode.RilLib.Math.VecBuilder;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Vector;
+import org.firstinspires.ftc.teamcode.RilLib.Math.Units;
+import org.firstinspires.ftc.teamcode.util.aim.AimSolution;
+import org.firstinspires.ftc.teamcode.util.aim.HiveAim;
 import org.firstinspires.ftc.teamcode.RobotState;
 import org.firstinspires.ftc.teamcode.util.LocalizationClock;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +26,60 @@ public class RobotStateTest {
     @BeforeEach
     void resetLocalization() {
         RobotState.getInstance().resetPose(new Pose2d(), LocalizationClock.now());
+        RobotState.getInstance().setTeam(null);
+        RobotState.getInstance().setCurrentGoal(RobotState.Goal.NORTH);
+    }
+
+    @Test
+    void sharedAimUsesOneSnapshotAndCentimeterDistance() {
+        RobotState state = RobotState.getInstance();
+        state.setTeam(false);
+        state.resetPose(new Pose2d(Units.inchesToMeters(59), Units.inchesToMeters(120),
+                new Rotation2d()), LocalizationClock.now());
+
+        AimSolution aim = state.getAimSolution().orElseThrow(AssertionError::new);
+        assertSame(aim, state.getAimSolution().orElseThrow(AssertionError::new));
+        assertEquals(HiveAim.Cell.RED_NORTH, aim.cell);
+        assertEquals(100 * Units.inchesToMeters(Math.hypot(
+                aim.solution.aimX - 59, aim.solution.aimY - 120)), aim.distanceCm, 1e-8);
+        assertEquals(Math.atan2(aim.solution.aimY - 120, aim.solution.aimX - 59),
+                aim.solution.turretAngle, 1e-8);
+    }
+
+    @Test
+    void sharedAimUpdatesAfterOdometryAndAllianceChanges() {
+        RobotState state = RobotState.getInstance();
+        state.setTeam(false);
+        double time = LocalizationClock.now();
+        state.resetPose(new Pose2d(Units.inchesToMeters(59), Units.inchesToMeters(120),
+                new Rotation2d()), time);
+        AimSolution first = state.getAimSolution().orElseThrow(AssertionError::new);
+        state.addOdometryObservation(new Pose2d(
+                Units.inchesToMeters(59), Units.inchesToMeters(125), new Rotation2d()), time + 0.1);
+        AimSolution moved = state.getAimSolution().orElseThrow(AssertionError::new);
+        assertNotSame(first, moved);
+        assertEquals(125, moved.robotYInches, 1e-8);
+
+        state.setTeam(true);
+        assertEquals(HiveAim.Cell.BLUE_NORTH,
+                state.getAimSolution().orElseThrow(AssertionError::new).cell);
+    }
+
+    @Test
+    void goalToggleAndMissingAllianceDoNotReuseOldAim() {
+        RobotState state = RobotState.getInstance();
+        state.setTeam(false);
+        state.resetPose(new Pose2d(Units.inchesToMeters(59), Units.inchesToMeters(120),
+                new Rotation2d()), LocalizationClock.now());
+        assertTrue(state.getAimSolution().isPresent());
+        state.toggleGoal();
+        assertTrue(state.getAimSolution().isEmpty());
+        state.resetPose(new Pose2d(Units.inchesToMeters(59), Units.inchesToMeters(20),
+                new Rotation2d()), LocalizationClock.now());
+        assertEquals(HiveAim.Cell.RED_SOUTH,
+                state.getAimSolution().orElseThrow(AssertionError::new).cell);
+        state.setTeam(null);
+        assertTrue(state.getAimSolution().isEmpty());
     }
 
     public Vector<N3> createDummyVector() {

@@ -11,8 +11,6 @@ import com.seattlesolvers.solverslib.controller.PIDFController;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
-import org.firstinspires.ftc.teamcode.RilLib.Math.Geometry.Pose2d;
-import org.firstinspires.ftc.teamcode.RilLib.Math.Interpolation.InterpolatingTreeMap;
 import org.firstinspires.ftc.teamcode.RobotState;
 import org.firstinspires.ftc.teamcode.config.FlywheelConfig;
 import org.firstinspires.ftc.teamcode.util.FlywheelInterpolation;
@@ -85,6 +83,11 @@ public class FlyWheelSubsystem extends SubsystemBase {
     }
 
     public void calcTargetRPM (double distanceCm) {
+        // An unavailable shot must not reuse the RPM from a previous target.
+        if (!Double.isFinite(distanceCm) || distanceCm < 0.0) {
+            setTargetRPM(0.0);
+            return;
+        }
         double targetRPM;
 
         if (REFRESH_TABLE) {
@@ -93,31 +96,14 @@ public class FlyWheelSubsystem extends SubsystemBase {
             targetRPM = flywheelInterpolator.getRPM(distanceCm);
         }
 
-        if (targetRPM != -1) {
-            FlywheelConfig.targetRPM = targetRPM;
-        }
+        setTargetRPM(Double.isFinite(targetRPM) && targetRPM >= 0.0 ? targetRPM : 0.0);
     }
 
+    /** Shot distance in centimeters using the table's shooter offset; NaN if no shot exists. */
     public double getDistance () {
-        boolean blueTeam = RobotState.getInstance().isBlueTeam();
-
-        Pose2d tagLocation;
-
-        if (blueTeam) {
-            if (isFrontGoal) {
-                tagLocation = BLUE_FRONT_GOAL;
-            } else {
-                tagLocation = BLUE_BACK_GOAL;
-            }
-        } else {
-            if (isFrontGoal) {
-                tagLocation = RED_FRONT_GOAL;
-            } else {
-                tagLocation = RED_BACK_GOAL;
-            }
-        }
-        double distance = 100 * RobotState.getInstance().getEstimatedPose().getTranslation().getDistance(tagLocation.getTranslation());
-        return distance - CENTER_TO_FRONT_OFFSET_CM;
+        return RobotState.getInstance().getAimSolution()
+                .map(aim -> aim.distanceCm - CENTER_TO_FRONT_OFFSET_CM)
+                .orElse(Double.NaN);
     }
 
     private void sendTelemetry () {

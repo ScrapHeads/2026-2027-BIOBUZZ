@@ -3,7 +3,10 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import static org.firstinspires.ftc.teamcode.config.TurretPosConfig.*;
 import static org.firstinspires.ftc.teamcode.util.PIDUtil.updatePIDController;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.controller.PIDFController;
@@ -13,11 +16,15 @@ import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Units;
 import org.firstinspires.ftc.teamcode.RobotState;
 import org.firstinspires.ftc.teamcode.config.TurretPosConfig;
+import org.firstinspires.ftc.teamcode.util.aim.AimSolution;
 import org.firstinspires.ftc.teamcode.util.aim.HiveAim;
+import org.firstinspires.ftc.teamcode.util.aim.HiveAimDashboard;
+
+import java.util.Optional;
 
 public class TurretRotSubsystem implements Subsystem {
     // TODO: Set encoder ticks per motor output-shaft revolution, including the motor's gearbox.
-    public static final double MOTOR_TPR = 1.0;
+    public static final double MOTOR_TPR = 28;
     // TODO: Set turret revolutions per motor output-shaft revolution (1/3 means 3:1 reduction).
     public static final double GEAR_RATIO = 1.0 / 3.0;
     // TODO: Set the turret's known physical angle at initialization; the encoder resets there.
@@ -59,7 +66,7 @@ public class TurretRotSubsystem implements Subsystem {
 
     /** Returns the unwrapped turret angle in degrees, relative to the startup reference. */
     public double getAngleDegrees() {
-        return START_ANGLE_DEGREES + turretRot.encoder.getPosition() * 360.0 / TICKS_PER_REV;
+        return START_ANGLE_DEGREES + ((turretRot.encoder.getPosition() * 360.0) / TICKS_PER_REV);
     }
 
     /** Sets a signed angle in degrees and enables PID to turn to and hold that angle. */
@@ -90,32 +97,56 @@ public class TurretRotSubsystem implements Subsystem {
     public void periodic() {
         updatePIDController(controller, pidfValues);
 
+        RobotState robotState = RobotState.getInstance();
+        Optional<AimSolution> sharedAim = robotState.getAimSolution();
+        Pose pose = sharedAim.map(aim -> new Pose(aim.robotXInches, aim.robotYInches, 0.0))
+                .orElseGet(robotState::getEstimatedPedroPose);
+        HiveAim.Cell cell = robotState.getTargetCell();
+        double currentAngleDegrees = getAngleDegrees();
+        Optional<HiveAim.Solution> solution = sharedAim.map(aim -> aim.solution);
+
         if (enablePID) {
             if (solveAngle) {
-                targetAngleDegrees = getPosToAngle();
+                targetAngleDegrees = getPosToAngle(solution);
             }
-            double pidOut = controller.calculate(getAngleDegrees(), targetAngleDegrees);
+            double pidOut = controller.calculate(currentAngleDegrees, targetAngleDegrees);
             setPower(pidOut);
         } else {
             setPower(targetPower);
         }
 
         sendTelemetry();
+        if (showAimDashboard) {
+            sendAimDashboard(pose, cell, solution, currentAngleDegrees);
+        }
     }
 
     /** Returns the solved turret angle in degrees, or the existing target if no shot is available. */
-    private double getPosToAngle() {
-        RobotState robotState = RobotState.getInstance();
-        HiveAim.Cell cell = robotState.getTargetCell();
-        if (cell == null) return getTargetAngleDegrees();
-
-        return HiveAim.solve(
-                cell,
-                HiveAim.Piece.POLLEN,
-                robotState.getEstimatedPedroPose(), // Already inches/radians.
-                Units.degreesToRadians(getAngleDegrees()),
-                false, -Math.PI, Math.PI
-        ).map(solution -> Units.radiansToDegrees(solution.turretAngle))
+    private double getPosToAngle(Optional<HiveAim.Solution> solution) {
+        return solution.map(aim -> Units.radiansToDegrees(aim.turretAngle))
                 .orElse(getTargetAngleDegrees());
+    }
+
+    private void sendAimDashboard(Pose pose, HiveAim.Cell cell,
+                                  Optional<HiveAim.Solution> solution, double currentAngleDegrees) {
+        TelemetryPacket packet = new TelemetryPacket();
+        packet.put("Turret/Cell", cell == null ? "Alliance not set" : cell.name());
+        packet.put("Turret/Pose available", pose != null);
+        packet.put("Turret/Solution available", solution.isPresent());
+        packet.put("Turret/Current angle (deg)", currentAngleDegrees);
+        packet.put("Turret/Target angle (deg)", getTargetAngleDegrees());
+        packet.put("Turret/PID enabled", enablePID);
+        packet.put("Turret/Auto aim enabled", solveAngle);
+        if (solution.isPresent()) {
+            HiveAim.Solution aim = solution.get();
+            packet.put("Turret/Solved angle (deg)", Units.radiansToDegrees(aim.turretAngle));
+            packet.put("Turret/Heading tolerance (deg)", Units.radiansToDegrees(aim.headingTolerance));
+        }
+
+        // With no pose, draw just the hive outlines; no aiming line is available.
+        HiveAimDashboard.draw(packet.fieldOverlay(),
+                pose == null ? 0.0 : pose.x(),
+                pose == null ? 0.0 : pose.y(), solution);
+        FtcDashboard.getInstance().sendTelemetryPacket(packet);
     }
 }
