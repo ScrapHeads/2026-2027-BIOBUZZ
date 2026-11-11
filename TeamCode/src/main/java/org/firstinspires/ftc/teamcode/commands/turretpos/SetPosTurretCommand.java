@@ -8,17 +8,18 @@ public class SetPosTurretCommand extends CommandBase {
 
     private final TurretRotSubsystem turretRot;
 
-    private final double pos;
+    private final double angleDegrees;
 
-    public SetPosTurretCommand(TurretRotSubsystem turretRot, double pos){
+    /** @param angleDegrees signed turret angle in degrees relative to the startup reference */
+    public SetPosTurretCommand(TurretRotSubsystem turretRot, double angleDegrees){
 
         this.turretRot = turretRot;
-        this.pos=pos;
+        this.angleDegrees = angleDegrees;
 
         addRequirements(turretRot);
     }
     @Override
-    public void initialize(){turretRot.setTargetPos(pos);}
+    public void initialize(){turretRot.turnToAngle(angleDegrees);}
 
 
     @Override

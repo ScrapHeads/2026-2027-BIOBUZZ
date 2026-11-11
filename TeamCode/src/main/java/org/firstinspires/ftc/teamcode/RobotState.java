@@ -7,7 +7,9 @@ import org.firstinspires.ftc.teamcode.RilLib.Math.Matrix;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Numbers.N1;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Numbers.N3;
 import org.firstinspires.ftc.teamcode.RilLib.Math.PoseEstimator;
+import org.firstinspires.ftc.teamcode.util.ConversionUtil;
 import org.firstinspires.ftc.teamcode.util.LocalizationClock;
+import org.firstinspires.ftc.teamcode.util.aim.HiveAim;
 import org.firstinspires.ftc.teamcode.vision.CameraPose;
 
 import java.util.NavigableSet;
@@ -16,6 +18,9 @@ import java.util.TreeSet;
 
 /** Serializable robot pose snapshot. Position: meters; heading: radians. */
 public class RobotState {
+    public enum Goal { NORTH, SOUTH }
+
+    private Goal currentGoal = Goal.NORTH;
     private transient PoseEstimator poseEstimator;
     // Mirror actual sample bounds because PoseEstimator.sampleAt clamps its input.
     private final transient NavigableSet<Double> odometryTimes = new TreeSet<>();
@@ -66,6 +71,7 @@ public class RobotState {
         if (pose == null) pose = other.getOdometryPose();
         setAll(pose, other.isBlueTeam(), other.getChassisSpeeds());
         cameraPose = other.getCameraPose();
+        currentGoal = other.getCurrentGoal();
     }
 
     public synchronized void addOdometryObservation(Pose2d pose, double time) {
@@ -116,8 +122,38 @@ public class RobotState {
     }
     public synchronized Boolean isBlueTeam() { return isBlue; }
     public synchronized void setTeam(Boolean blue) { isBlue = blue; }
+
+    /** Defaults to NORTH, including when restoring a snapshot without a goal field. */
+    public synchronized Goal getCurrentGoal() {
+        return currentGoal == null ? Goal.NORTH : currentGoal;
+    }
+
+    public synchronized void setCurrentGoal(Goal goal) {
+        if (goal == null) throw new IllegalArgumentException("Goal must be NORTH or SOUTH");
+        currentGoal = goal;
+    }
+
+    /** Call once per button press to switch between the north and south goals. */
+    public synchronized void toggleGoal() {
+        currentGoal = getCurrentGoal() == Goal.NORTH ? Goal.SOUTH : Goal.NORTH;
+    }
+
+    /** Selected goal's alliance cell, or null until the alliance has been set. */
+    public synchronized HiveAim.Cell getTargetCell() {
+        if (isBlue == null) return null;
+        if (getCurrentGoal() == Goal.NORTH) {
+            return isBlue ? HiveAim.Cell.BLUE_NORTH : HiveAim.Cell.RED_NORTH;
+        }
+        return isBlue ? HiveAim.Cell.BLUE_SOUTH : HiveAim.Cell.RED_SOUTH;
+    }
+
     public synchronized Pose2d getOdometryPose() { return odometryPose; }
     public synchronized Pose2d getEstimatedPose() { return estimatedPose; }
+
+    /** Fused pose in Pedro coordinates (inches/radians), or null before localization initializes. */
+    public synchronized com.pedropathing.math.Pose getEstimatedPedroPose() {
+        return estimatedPose == null ? null : ConversionUtil.toPedro(estimatedPose);
+    }
     public synchronized void setCameraPose(CameraPose pose) { cameraPose = pose; }
     public synchronized CameraPose getCameraPose() { return cameraPose; }
     public synchronized void setHeadingOffset(Rotation2d offset) { headingOffset = offset; }
@@ -126,6 +162,6 @@ public class RobotState {
     public synchronized ChassisSpeeds getChassisSpeeds() { return chassisSpeeds; }
     @Override public synchronized String toString() {
         return "RobotState{pose=" + odometryPose + ", estPose=" + estimatedPose
-                + ", isBlue=" + isBlue + "}";
+                + ", isBlue=" + isBlue + ", currentGoal=" + getCurrentGoal() + "}";
     }
 }

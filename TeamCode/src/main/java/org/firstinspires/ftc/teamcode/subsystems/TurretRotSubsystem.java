@@ -1,9 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.enablePID;
-import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.pidfValues;
-import static org.firstinspires.ftc.teamcode.config.FlywheelConfig.targetPower;
-import static org.firstinspires.ftc.teamcode.config.TurretPosConfig.targetPos;
+import static org.firstinspires.ftc.teamcode.config.TurretPosConfig.*;
 import static org.firstinspires.ftc.teamcode.util.PIDUtil.updatePIDController;
 
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -13,29 +10,33 @@ import com.seattlesolvers.solverslib.controller.PIDFController;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
+import org.firstinspires.ftc.teamcode.RilLib.Math.Units;
+import org.firstinspires.ftc.teamcode.RobotState;
 import org.firstinspires.ftc.teamcode.config.TurretPosConfig;
+import org.firstinspires.ftc.teamcode.util.aim.HiveAim;
 
 public class TurretRotSubsystem implements Subsystem {
-    private final MotorEx turretRot;
-
-    private final PIDFController controller;
-
-    private final MultipleTelemetry telemetry;
-
-    public static final double MOTOR_TPR=1;//TODO
-    public static final double GEAR_RATIO=1.0/3.0;//TODO
+    // TODO: Set encoder ticks per motor output-shaft revolution, including the motor's gearbox.
+    public static final double MOTOR_TPR = 1.0;
+    // TODO: Set turret revolutions per motor output-shaft revolution (1/3 means 3:1 reduction).
+    public static final double GEAR_RATIO = 1.0 / 3.0;
+    // TODO: Set the turret's known physical angle at initialization; the encoder resets there.
+    public static final double START_ANGLE_DEGREES = 0.0;
 
     public static final double TICKS_PER_REV = MOTOR_TPR / GEAR_RATIO;
 
-    public TurretRotSubsystem(HardwareMap hm, MultipleTelemetry telemetry){
-        turretRot = new MotorEx(hm,"turretRot");
+    private final MotorEx turretRot;
+    private final PIDFController controller;
+    private final MultipleTelemetry telemetry;
 
+    public TurretRotSubsystem(HardwareMap hm, MultipleTelemetry telemetry) {
+        turretRot = new MotorEx(hm, "turretRot");
         this.telemetry = telemetry;
 
         turretRot.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         turretRot.encoder.reset();
 
-        controller= new PIDFController(
+        controller = new PIDFController(
                 pidfValues.kP,
                 pidfValues.kI,
                 pidfValues.kD,
@@ -43,41 +44,78 @@ public class TurretRotSubsystem implements Subsystem {
         );
         pidfValues.setLasts();
     }
-    public void setPower(double power){turretRot.set(Math.max(-1.0, Math.min(1.0, power)));}
 
-    public double getPower (){return turretRot.get();}
+    public void setPower(double power) {
+        turretRot.set(Math.max(-1.0, Math.min(1.0, power)));
+    }
 
-    public double getTicksPerSec() { return turretRot.encoder.getRawVelocity();}
+    public double getPower() {
+        return turretRot.get();
+    }
 
-    public double getPos() { return(getTicksPerSec()* 60.0)/TICKS_PER_REV;}
+    public double getTicksPerSec() {
+        return turretRot.encoder.getRawVelocity();
+    }
 
-    public void setTargetPos (double pos) {targetPos = Math.max(0, pos);}
+    /** Returns the unwrapped turret angle in degrees, relative to the startup reference. */
+    public double getAngleDegrees() {
+        return START_ANGLE_DEGREES + turretRot.encoder.getPosition() * 360.0 / TICKS_PER_REV;
+    }
 
-    public double getTargetPos(){ return targetPos;}
+    /** Sets a signed angle in degrees and enables PID to turn to and hold that angle. */
+    public void turnToAngle(double angleDegrees) {
+        targetAngleDegrees = angleDegrees;
+        setEnablePID(true);
+    }
 
-    /**
-     * @param enablePID true if you want the PID on, false if off
-     */
+    public double getTargetAngleDegrees() {
+        return targetAngleDegrees;
+    }
 
-    public void setEnablePID (boolean enablePID){TurretPosConfig.enablePID=enablePID;}
+    public void setEnablePID(boolean enablePID) {
+        TurretPosConfig.enablePID = enablePID;
+    }
 
-    public boolean getEnablePID (){return enablePID;}
+    public boolean getEnablePID() {
+        return enablePID;
+    }
 
-    private void sendTelemetry () {
-        telemetry.addData("Current Pos: ", getPos());
+    private void sendTelemetry() {
+        telemetry.addData("Current Angle (deg): ", getAngleDegrees());
+        telemetry.addData("Target Angle (deg): ", getTargetAngleDegrees());
         telemetry.addData("Is PID controller on: ", getEnablePID());
     }
+
     @Override
-    public void periodic () {
+    public void periodic() {
         updatePIDController(controller, pidfValues);
 
         if (enablePID) {
-            double pidOut = controller.calculate(getPos(), targetPos);
+            if (solveAngle) {
+                targetAngleDegrees = getPosToAngle();
+            }
+            double pidOut = controller.calculate(getAngleDegrees(), targetAngleDegrees);
             setPower(pidOut);
         } else {
             setPower(targetPower);
         }
 
         sendTelemetry();
+    }
+
+    /** Returns the solved turret angle in degrees, or the existing target if no shot is available. */
+    private double getPosToAngle() {
+        RobotState robotState = RobotState.getInstance();
+        HiveAim.Cell cell = robotState.getTargetCell();
+        if (cell == null) return getTargetAngleDegrees();
+
+        return HiveAim.solve(
+                cell,
+                HiveAim.Piece.POLLEN,
+                robotState.getEstimatedPedroPose(), // Already inches/radians.
+                Units.degreesToRadians(getAngleDegrees()),
+                false, -Math.PI, Math.PI
+        ).map(solution -> Units.radiansToDegrees(solution.turretAngle))
+                .orElse(getTargetAngleDegrees());
     }
 }
