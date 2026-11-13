@@ -8,7 +8,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.seattlesolvers.solverslib.command.Subsystem;
+import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.controller.PIDFController;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
@@ -16,15 +16,18 @@ import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import org.firstinspires.ftc.teamcode.RilLib.Math.Units;
 import org.firstinspires.ftc.teamcode.RobotState;
 import org.firstinspires.ftc.teamcode.config.TurretPosConfig;
+import org.firstinspires.ftc.teamcode.util.ConversionUtil;
 import org.firstinspires.ftc.teamcode.util.aim.AimSolution;
 import org.firstinspires.ftc.teamcode.util.aim.HiveAim;
 import org.firstinspires.ftc.teamcode.util.aim.HiveAimDashboard;
 
 import java.util.Optional;
 
-public class TurretRotSubsystem implements Subsystem {
+public class TurretRotSubsystem extends SubsystemBase {
     // TODO: Set encoder ticks per motor output-shaft revolution, including the motor's gearbox.
-    public static final double MOTOR_TPR = 28;
+    //1150: ((1+(46.0/11.0)) * 28)
+    //312: ((((1+(46/17))) * (1+(46/11))) * 28)
+    public static final double MOTOR_TPR = ((((1+(46.0/17.0))) * (1+(46.0/11.0))) * 28);
     // TODO: Set turret revolutions per motor output-shaft revolution (1/3 means 3:1 reduction).
     public static final double GEAR_RATIO = 1.0 / 3.0;
     // TODO: Set the turret's known physical angle at initialization; the encoder resets there.
@@ -40,7 +43,7 @@ public class TurretRotSubsystem implements Subsystem {
         turretRot = new MotorEx(hm, "turretRot");
         this.telemetry = telemetry;
 
-        turretRot.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        turretRot.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         turretRot.encoder.reset();
 
         controller = new PIDFController(
@@ -109,7 +112,14 @@ public class TurretRotSubsystem implements Subsystem {
             if (solveAngle) {
                 targetAngleDegrees = getPosToAngle(solution);
             }
-            double pidOut = controller.calculate(currentAngleDegrees, targetAngleDegrees);
+            double errorDegrees = ConversionUtil.wrapAngleDeg(
+                    targetAngleDegrees - currentAngleDegrees);
+
+            double nearestTargetDegrees = currentAngleDegrees + errorDegrees;
+
+            double pidOut = controller.calculate(
+                    currentAngleDegrees, nearestTargetDegrees);
+//            double pidOut = controller.calculate(currentAngleDegrees, targetAngleDegrees);
             setPower(pidOut);
         } else {
             setPower(targetPower);

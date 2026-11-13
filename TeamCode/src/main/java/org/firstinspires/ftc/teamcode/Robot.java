@@ -11,6 +11,7 @@ import org.firstinspires.ftc.teamcode.subsystems.FlyWheelSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeBlockerSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.TurretRotSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TurretStopperSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.VisionSubsystem;
 import org.firstinspires.ftc.teamcode.util.StateIO;
@@ -28,8 +29,9 @@ public class Robot implements AutoCloseable {
 
     public final TransferSubsystem transfer;
     public final IntakeSubsystem intake;
+    public final TurretRotSubsystem turretRot;
 
-    public final VisionSubsystem vision;
+//    public final VisionSubsystem vision;
     public final FlowerRampSubsystem ramp;
     public final IntakeBlockerSubsystem intakeBlocker;
     public final TurretStopperSubsystem turretStopper;
@@ -48,9 +50,11 @@ public class Robot implements AutoCloseable {
 
         transfer = new TransferSubsystem(hm);
 
-        vision = new VisionSubsystem(hm, multipleTelemetry, dashboard);
-        ((org.firstinspires.ftc.teamcode.localization.DrivetrainLocalizer)
-                drivetrain.follower.localizer).setVisionUpdate(vision::updateLocalization);
+        turretRot = new TurretRotSubsystem(hm, multipleTelemetry);
+
+//        vision = new VisionSubsystem(hm, multipleTelemetry, dashboard);
+//        ((org.firstinspires.ftc.teamcode.localization.DrivetrainLocalizer)
+//                drivetrain.follower.localizer).setVisionUpdate(vision::updateLocalization);
 
         turretStopper = new TurretStopperSubsystem(hm);
 
@@ -62,7 +66,7 @@ public class Robot implements AutoCloseable {
     }
 
     @Override public void close() {
-        vision.close();
+//        vision.close();
         drivetrain.stop();
     }
 

@@ -24,7 +24,7 @@ public class FlyWheelSubsystem extends SubsystemBase {
 
     public static final double MOTOR_TPR = 28;
 
-    public static final double GEAR_RATIO = 1.0/3.0;
+    public static final double GEAR_RATIO = 9.0/11.0;
 
     public static final double TICKS_PER_REV = MOTOR_TPR / GEAR_RATIO;
 

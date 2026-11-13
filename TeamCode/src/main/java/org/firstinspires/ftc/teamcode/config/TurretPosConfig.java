@@ -17,6 +17,6 @@ public class TurretPosConfig {
 
     // TODO: Tune turret PIDF gains with the position error measured in degrees.
     public static PIDFValues pidfValues = new PIDFValues(
-            0.0, 0.0, 0.0, 0.0
+            0.031, 0.0, 0.001, 0.0
     );
 }
